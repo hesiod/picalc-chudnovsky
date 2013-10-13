@@ -14,6 +14,7 @@
 #include "pi.h"
 #include "tsio.h"
 #include "util.h"
+#include <ncurses.h>
 
 using namespace std;
 
@@ -31,9 +32,20 @@ void pi::do_calculate(const unsigned int phase, const unsigned int runs)
 			local_sum += (dividend / pow(n, 2));
 			n += threads;
 			print_percent(i, runs);
+			chrono::time_point<chrono::high_resolution_clock> middle = chrono::high_resolution_clock::now();
+			chrono::duration<double> runs_took = middle - start;
+			double rel = 1.0f / ((double)i / (double)runs);
+			chrono::duration<double> remaining = (runs_took * rel) - runs_took;
+			cout.unsetf(ios_base::floatfield);
+			initscr();
+			ts << "\tEstimated remaining time: " << setprecision(2) << remaining.count() << "s";
+			clrtoeol();
+			endwin();
+			// i / runs = 0.1
+			// runs_took = 1s
 		}
 		chrono::time_point<chrono::high_resolution_clock> end = chrono::high_resolution_clock::now();
-		chrono::duration<double> elapsed_seconds = end-start;
+		chrono::duration<double> elapsed_seconds = end - start;
 		//time_t end_time = chrono::system_clock::to_time_t(end);
 		ts.lprintf("\n");
 		ts << "Calculation took " << fixed << setprecision(10) << elapsed_seconds.count() << "s" << endl;

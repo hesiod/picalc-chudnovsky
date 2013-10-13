@@ -11,4 +11,4 @@ env['CPPFLAGS'] = ['-stdlib=libc++', '-ansi', '-std=c++11',  '-O3', '-fcaret-dia
 #env['LINK'] = 'ld'
 env['CXX'] = 'clang++'
 
-env.Program(target = 'pi', source = ["main.cpp", "pi.cpp", "tsio.cpp", "util.cpp"], LIBS = ['c++', 'supc++', 'pthread', 'gmpxx', 'gmp'])
+env.Program(target = 'pi', source = ["main.cpp", "pi.cpp", "tsio.cpp", "util.cpp"], LIBS = ['c++', 'supc++', 'pthread', 'gmpxx', 'gmp', 'ncurses'])

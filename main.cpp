@@ -61,7 +61,7 @@ int main(int argc, char* argv[])
 
 	p.calculate(runc);
 
-	ts << p << endl;
+	//ts << p << endl;
 
 	ts << p.digits() << endl;
 
