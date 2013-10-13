@@ -29,7 +29,7 @@ void print_percent(const T a, const T b)
 		ts << "\r" << fixed << setprecision(1) << rel;
 }
 
-mpf_class pow(const mpf_class src, const unsigned long int exp)
+mpf_class pow(const mpf_class src, const unsigned long int exp) noexcept
 {
 	mpf_class tmp;
 	mpf_pow_ui(tmp.get_mpf_t(), src.get_mpf_t(), exp);
@@ -40,9 +40,9 @@ void pi::do_calculate(const uint64_t phase, const uint64_t runs)
 {
 	thread_local mpf_class local_sum(0, precision);
 	thread_local mpf_class n(phase + 1, precision);
-	ts.lock();
 	if (phase == 0)
 	{
+		ts.lock();
 		print_percent(0, 100);
 		for (thread_local uint64_t i = 0; i <= runs; i++)
 		{
@@ -51,6 +51,7 @@ void pi::do_calculate(const uint64_t phase, const uint64_t runs)
 			print_percent(i, runs);
 		} 
 		ts.lprintf("\n");
+		ts.unlock();
 	}
 	else
 	{
@@ -60,9 +61,8 @@ void pi::do_calculate(const uint64_t phase, const uint64_t runs)
 			n += threads;
 		}
 	}
-	ts.unlock();
 	add_sum(local_sum);
-	//ts.lprintf("Thread number %llu \thas finished!\n", phase + 1);
+	ts.lprintf("Thread number %llu \thas finished!\n", phase + 1);
 }
 
 void join_all(vector<thread>& v)
@@ -81,9 +81,9 @@ void pi::calculate(const uint64_t runs)
 		t[phase] = thread([&] (const uint64_t _phase, const uint64_t _runs) { this->do_calculate(_phase, _runs); }, phase, runs);
 	}
 
-	ts << "All threads are finished." << endl;
-
 	join_all(t);
+
+	ts << "All threads are finished." << endl;
 }
 
 int main(int argc, char* argv[])
@@ -99,7 +99,7 @@ int main(int argc, char* argv[])
 
 	p.calculate(runc);
 
-	//cout << p;
+	//ts << p;
 
 	return 0;
 }
