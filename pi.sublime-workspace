@@ -1,0 +1,521 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"prin",
+				"print_percent"
+			],
+			[
+				"m",
+				"m"
+			],
+			[
+				"join",
+				"join_all"
+			],
+			[
+				"uint",
+				"uintptr_t"
+			],
+			[
+				"ke",
+				"kernel_context"
+			],
+			[
+				"LACKS_",
+				"LACKS_TIME_H"
+			],
+			[
+				"LACKS",
+				"LACKS_SCHED_H"
+			],
+			[
+				"stdout",
+				"stdout"
+			],
+			[
+				"HAVE_",
+				"HAVE_MREMAP"
+			],
+			[
+				"elf",
+				"elf_ph_t"
+			],
+			[
+				"memor",
+				"memory_context_t"
+			],
+			[
+				"NEWLI",
+				"NEWLIBDIR"
+			],
+			[
+				"newlib",
+				"newlib"
+			],
+			[
+				"BI",
+				"BINUTILSBRANCH"
+			],
+			[
+				"GCC",
+				"GCCBRANCH"
+			],
+			[
+				"ld",
+				"ld"
+			],
+			[
+				"setup",
+				"setup_syscallret"
+			],
+			[
+				"cli",
+				"cli"
+			],
+			[
+				"_err",
+				"_errno_entry"
+			],
+			[
+				"0x1000",
+				"0x1000"
+			],
+			[
+				"IDTE",
+				"IDTE_SIZE"
+			],
+			[
+				"gdt",
+				"gdt_tss_entry_t"
+			],
+			[
+				"0xFFFF",
+				"0xFFFFFFFF"
+			],
+			[
+				"gd",
+				"gdt_entries"
+			],
+			[
+				"p",
+				"packed"
+			],
+			[
+				"0xFF",
+				"0xFFFFFFF"
+			],
+			[
+				"gdt_",
+				"gdt_entries"
+			],
+			[
+				"gdt_en",
+				"gdt_entries"
+			],
+			[
+				"s",
+				"sizeof"
+			],
+			[
+				"uin",
+				"uint8_t"
+			],
+			[
+				"__",
+				"__reserved1"
+			],
+			[
+				"gdt_ent",
+				"gdt_entry_t"
+			],
+			[
+				"gdt_poin",
+				"gdt_pointer_t"
+			],
+			[
+				"ap_",
+				"ap_loader64"
+			],
+			[
+				"GDT",
+				"GDT64R"
+			],
+			[
+				"FT",
+				"FT_HWBLOCKED"
+			],
+			[
+				"FT_",
+				"FT_SWBLOCKED"
+			],
+			[
+				"ao",
+				"ap_boot_vector"
+			],
+			[
+				"ap_bo",
+				"ap_boot_vector"
+			],
+			[
+				"prev",
+				"previous"
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"file": "pi.cpp",
+			"settings":
+			{
+				"buffer_size": 2482,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "pi.h",
+			"settings":
+			{
+				"buffer_size": 165,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "SConstruct",
+			"settings":
+			{
+				"buffer_size": 309,
+				"line_ending": "Unix"
+			}
+		}
+	],
+	"build_system": "Packages/Makefile/Make.sublime-build",
+	"command_palette":
+	{
+		"height": 392.0,
+		"selected_items":
+		[
+			[
+				"in",
+				"Indentation: Reindent Lines"
+			],
+			[
+				"",
+				"Indentation: Convert to Tabs"
+			],
+			[
+				"Snippet: ",
+				"Snippet: #!/usr/bin/env"
+			]
+		],
+		"width": 392.0
+	},
+	"console":
+	{
+		"height": 146.0
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"file_history":
+	[
+		"/home/tobias/pi/Makefile",
+		"/home/tobias/pi/scons",
+		"/home/tobias/test.tex",
+		"/home/tobias/os-dev/lib/dlmalloc/malloc-2.8.6.h",
+		"/home/tobias/os-dev/include/string.h",
+		"/home/tobias/os-dev/include/task.h",
+		"/home/tobias/os-dev/arch/amd64/multiboot.c",
+		"/home/tobias/os-dev/include/config.h",
+		"/home/tobias/os-dev/include/multiboot.h",
+		"/home/tobias/os-dev/include/nedmalloc.h",
+		"/home/tobias/os-dev/lib/std/stdlib.c",
+		"/home/tobias/os-dev/include/mm.h",
+		"/home/tobias/os-dev/include/ctype.h",
+		"/home/tobias/os-dev/arch/amd64/handler.c",
+		"/home/tobias/os-dev/arch/amd64/syscall.c",
+		"/home/tobias/os-dev/arch/amd64/pmm.c",
+		"/home/tobias/os-dev/include/pmm.h",
+		"/home/tobias/os-dev/linker.ld",
+		"/home/tobias/os-dev/os-dev.sublime-project",
+		"/home/tobias/os-dev/arch/x86-realmode/start.S",
+		"/home/tobias/os-dev/arch/amd64/mp.c",
+		"/home/tobias/os-dev/libc/build.sh",
+		"/home/tobias/os-dev/makefile",
+		"/home/tobias/os-dev/arch/amd64/llapic.S",
+		"/home/tobias/os-dev/lib/glue/crt0.S",
+		"/home/tobias/os-dev/arch/x86/loader.S",
+		"/home/tobias/os-dev/arch/amd64/glue.S",
+		"/home/tobias/os-dev/lib/glue/api.c",
+		"/home/tobias/os-dev/cross/build.sh",
+		"/home/tobias/os-dev/arch/amd64/kernel.c",
+		"/home/tobias/os-dev/lib/std/errno.c",
+		"/home/tobias/os-dev/lib/std/string.c",
+		"/home/tobias/os-dev/arch/amd64/fatal.c",
+		"/home/tobias/os-dev/arch/amd64/task.c",
+		"/home/tobias/os-dev/include/stdio.h",
+		"/home/tobias/os-dev/arch/amd64/console.c",
+		"/home/tobias/os-dev/lib/std/stdio.c",
+		"/home/tobias/os-dev/lib/std/ctype.c",
+		"/home/tobias/os-dev/arch/amd64/version.c",
+		"/home/tobias/os-dev/include/paging.h",
+		"/home/tobias/os-dev/include/mp.h",
+		"/home/tobias/os-dev/arch/amd64/vmm.c",
+		"/home/tobias/os-dev/arch/amd64/apic.c",
+		"/home/tobias/os-dev/include/idt.h",
+		"/home/tobias/os-dev/arch/amd64/idt.c",
+		"/home/tobias/os-dev/arch/amd64/gdt.c",
+		"/home/tobias/os-dev/include/gdt.h",
+		"/home/tobias/os-dev/util/mkinitrd.h",
+		"/home/tobias/.config/sublime-text-2/Packages/User/R.sublime-settings",
+		"/home/tobias/os-dev/include/apic.h",
+		"/home/tobias/os-dev/include/stdint.h",
+		"/home/tobias/os-dev/arch/amd64/mm.c",
+		"/home/tobias/os-dev/lib/nedmalloc/malloc.c.h",
+		"/home/tobias/os-dev/lib/nedmalloc/nedmalloc.c",
+		"/home/tobias/os-dev/arch/amd64/loader64.S",
+		"/home/tobias/os-dev/include/stddef.h",
+		"/home/tobias/os-dev/include/iso646.h",
+		"/home/tobias/os-dev/include/sys/types.h",
+		"/home/tobias/os-dev/include/sys/mman.h",
+		"/home/tobias/os-dev/include/fcntl.h",
+		"/home/tobias/os-dev/include/machine/_sizes.h",
+		"/home/tobias/os-dev/old/.makefile.swp",
+		"/home/tobias/.config/sublime-text-2/Packages/Default/Default (Linux).sublime-keymap",
+		"/home/tobias/.config/sublime-text-2/Packages/User/Preferences.sublime-settings",
+		"/home/tobias/.config/sublime-text-2/Packages/Default/Preferences.sublime-settings",
+		"/home/tobias/os-dev/arch/amd64/keyboard.c",
+		"/home/tobias/os-dev/tags"
+	],
+	"find":
+	{
+		"height": 36.0
+	},
+	"find_in_files":
+	{
+		"height": 0.0,
+		"where_history":
+		[
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"terminate",
+			"> ",
+			"time",
+			"BIT(1) << ",
+			"1LLU",
+			"USE_SPIN_LOCKS",
+			"USE_LOCKS",
+			";\n",
+			"pml4",
+			"\nvoid init_vmm(void);\nvoid init_context(memory_context_t context, uint8_t flags);\nint map_page(memory_context_t context, paddr_t phys, vaddr_t virt, uint64_t pml4_flags, uint64_t pdpt_flags, uint64_t pd_flags, uint64_t pte_flags);\nint map_page_range(memory_context_t context, paddr_t phys, vaddr_t virt, size_t num, uint64_t pml4_flags, uint64_t pdpt_flags, uint64_t pd_flags, uint64_t pte_flags);\nvoid flush_cr3(memory_context_t context);\n",
+			"extern",
+			"__",
+			"CFLAGS",
+			"HDRFILES",
+			"ISO",
+			"$T64\"",
+			"$T32\"",
+			"ptr",
+			"scanf",
+			"\");\n",
+			"div",
+			"ltr",
+			"uint64_t",
+			"pml4_no",
+			"pd_no",
+			"pdpt_no",
+			"pte_no",
+			"pml4_no",
+			"ebase",
+			"indent"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+			"BIT(",
+			"BIT(1)",
+			"global",
+			"",
+			"\"$T64",
+			"\"$T32",
+			"uintptr_t",
+			"PML4_NO",
+			"PD_NO",
+			"PDPT_NO",
+			"PTE_NO"
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 0,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "pi.cpp",
+					"settings":
+					{
+						"buffer_size": 2482,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2216,
+								2216
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 2055.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "pi.h",
+					"settings":
+					{
+						"buffer_size": 165,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								92,
+								92
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "SConstruct",
+					"settings":
+					{
+						"buffer_size": 309,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								195,
+								195
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage"
+						},
+						"translation.x": 11.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 0.0
+	},
+	"input":
+	{
+		"height": 36.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.exec":
+	{
+		"height": 47.0
+	},
+	"replace":
+	{
+		"height": 62.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 500.0,
+		"selected_items":
+		[
+		],
+		"width": 380.0
+	},
+	"show_minimap": true,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 237.0,
+	"status_bar_visible": true
+}
