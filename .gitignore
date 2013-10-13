@@ -2,4 +2,4 @@
 .tags
 .tags_sorted_by_file
 pi
-pi.o
+*.o
