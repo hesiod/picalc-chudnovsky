@@ -4,11 +4,13 @@
  * 
  */
 
+#ifndef PI_H
+#define PI_H
+
 #include <iostream>
-#include <fstream>
 #include <cstdarg>
-#include <thread>
-#include <future>
+#include <gmp.h>
+#include <gmpxx.h>
 
 class pi
 {
@@ -20,11 +22,11 @@ private:
 		sum += origin;
 		m.unlock();
 	}
-	void do_calculate(const uint64_t phase, const uint64_t runs);
-	uint64_t precision;
+	void do_calculate(const unsigned phase, const unsigned runs);
+	unsigned precision;
 	mpf_class sum;
-	uint64_t threads;
-	const uint64_t dividend = 1;
+	unsigned threads;
+	const unsigned dividend = 1;
 public:
 	std::ostream& operator<<(std::ostream& out)
 	{
@@ -40,7 +42,7 @@ public:
 	pi(mp_bitcnt_t _precision) : precision(_precision), sum(0, precision), threads(1)
 	{
 	}
-	pi(mp_bitcnt_t _precision, uint64_t thread_count) : precision(_precision), sum(0, _precision), threads(thread_count)
+	pi(mp_bitcnt_t _precision, unsigned thread_count) : precision(_precision), sum(0, _precision), threads(thread_count)
 	{
 		if (threads < 1)
 			throw std::invalid_argument("At least one thread is needed!");
@@ -48,5 +50,7 @@ public:
 	~pi()
 	{
 	}
-	void calculate(uint64_t runs);
+	void calculate(unsigned runs);
 };
+
+#endif
