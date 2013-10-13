@@ -9,4 +9,4 @@ env['CPPFLAGS'] = ['-stdlib=libc++', '-W', '-Wall', '-Wextra', '-pedantic', '-Wi
 #env['LINK'] = 'ld'
 env['CXX'] = 'clang++'
 
-env.Program('pi.cpp', LIBS=['c++', 'supc++', 'pthread', 'gmpxx', 'gmp'], LIBPATH='.')
+env.Program(target = 'pi', source = ["pi.cpp", "tsio.cpp"], LIBS = ['c++', 'supc++', 'pthread', 'gmpxx', 'gmp'], LIBPATH = '.')
