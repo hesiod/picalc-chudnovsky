@@ -4,7 +4,7 @@ env = Environment()
 
 env['ENV']['TERM'] = os.environ['TERM']
 
-env['CPPFLAGS'] = ['-stdlib=libc++', '-ansi', '-std=c++11',  '-O3', '-fcaret-diagnostics',
+env['CPPFLAGS'] = ['-stdlib=libc++', '-ansi', '-std=c++11',  '-O3', '-fcaret-diagnostics', '-march=native',
 '-W', '-Wall', '-Wextra', '-Wpedantic', 
 '-Winit-self', '-Wold-style-cast', '-Woverloaded-virtual', '-Wuninitialized', '-Wmissing-declarations']
 #env['LINKFLAGS'] = ['-static']

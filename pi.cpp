@@ -17,7 +17,7 @@
 
 using namespace std;
 
-void pi::do_calculate(const unsigned phase, const unsigned runs)
+void pi::do_calculate(const unsigned int phase, const unsigned int runs)
 {
 	thread_local mpf_class local_sum(0, precision);
 	thread_local mpf_class n(phase + 1, precision);
@@ -26,7 +26,7 @@ void pi::do_calculate(const unsigned phase, const unsigned runs)
 		ts.lock();
 		print_percent(0, 100);
 		chrono::time_point<chrono::high_resolution_clock> start = chrono::high_resolution_clock::now();
-		for (thread_local unsigned i = 0; i <= runs; i++)
+		for (thread_local unsigned int i = 0; i <= runs; i++)
 		{
 			local_sum += (dividend / pow(n, 2));
 			n += threads;
@@ -37,31 +37,38 @@ void pi::do_calculate(const unsigned phase, const unsigned runs)
 		//time_t end_time = chrono::system_clock::to_time_t(end);
 		ts.lprintf("\n");
 		ts << "Calculation took " << fixed << setprecision(10) << elapsed_seconds.count() << "s" << endl;
+		(threads >= 10) ? (ts.lprintf("\r 0/%2u threads are finished.", threads)) : \
+			(ts.lprintf("\r0/%u threads are finished.", threads));
 		ts.unlock();
 	}
 	else
 	{
-		for (thread_local unsigned i = 0; i <= runs; i++)
+		for (thread_local unsigned int i = 0; i <= runs; i++)
 		{
 			local_sum += (dividend / pow(n, 2));
 			n += threads;
 		}
 	}
 	add_sum(local_sum);
-	ts.lprintf("Thread number %llu \thas finished!\n", phase + 1);
+	++finished_threads;
+	(threads >= 10) ? (ts.lprintf("\r%2u/%2u threads are finished.", finished_threads.load(), threads)) : \
+		(ts.lprintf("\r%u/%u threads are finished.", finished_threads.load(), threads));
 }
 
-void pi::calculate(const unsigned runs)
+void pi::calculate(const unsigned int runs)
 {
 	vector<thread> t (threads);
 
-	for (unsigned phase = 0; phase < threads; phase++)
+	for (unsigned int phase = 0; phase < threads; phase++)
 	{
 		//ts << "Starting thread number " << phase + 1 << "." << endl;
-		t[phase] = thread([&] (const unsigned _phase, const unsigned _runs) { this->do_calculate(_phase, _runs); }, phase, runs);
+		t[phase] = thread([&] (const unsigned int _phase, const unsigned int _runs) { this->do_calculate(_phase, _runs); }, phase, runs);
 	}
 
 	join_all(t);
+
+	(threads >= 10) ? (ts.lprintf("\r%2u/%2u threads are finished.\n", finished_threads.load(), threads)) : \
+		(ts.lprintf("\r%u/%u threads are finished.\n", finished_threads.load(), threads));
 
 	ts << "All threads are finished." << endl;
 }

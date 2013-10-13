@@ -46,11 +46,13 @@ void print_percent(const T a, const T b)
 	double rel = (double)a / (double)b;
 	rel *= 100;
 	if (rel == 0.0f)
-		ts << "\r  0.0%";
+		ts << "\r  0.0% ";
 	else if (rel == 100.0f)
-		ts << "\r100.0%";
+		ts << "\r100.0% ";
+	else if (rel < 10.0f)
+		ts << "\r  " << std::fixed << std::setprecision(1) << rel << "% ";
 	else
-		ts << "\r" << std::fixed << std::setprecision(1) << rel;
+		ts << "\r " << std::fixed << std::setprecision(1) << rel << "% ";
 }
 
 template void print_percent<int>(int, int);

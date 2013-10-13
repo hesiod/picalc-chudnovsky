@@ -4,6 +4,9 @@
  * 
  */
 
+#ifndef TSIO_H
+#define TSIO_H
+
 #include <iostream>
 #include <thread>
 #include <future>
@@ -15,7 +18,7 @@ class tso : tsio
 };
 
 template<std::istream& I>
-class tsi : tsio
+class tsi
 {
 	std::istream& operator>>(T& t) = delete;
 };*/
@@ -104,3 +107,5 @@ template<std::istream& I, std::ostream& O>
 std::thread::id tsio<I, O>::id;
 
 extern tsio<std::cin, std::cout> ts;
+
+#endif
