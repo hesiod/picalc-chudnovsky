@@ -57,13 +57,13 @@ int main(int argc, char* argv[])
 
 	cout << "Using " << threadc << " threads!" << endl;
 
-	pi p(100000, threadc);
+	pi p(prec, threadc);
 
 	p.calculate(runc);
 
-	ts << p.digits() << endl;
+	ts << p << endl;
 
-	//ts << p << endl;
+	ts << p.digits() << endl;
 
 	return 0;
 }
