@@ -40,8 +40,20 @@ void disable_cursor()
 	printf("\033[?25l");
 }
 
+void cursor_up()
+{
+	// (033 == escape character)
+	printf("\033[A");
+}
+
+void clear_line()
+{
+	// (033 == escape character)
+	printf("\033[J");
+}
+
 template<typename T>
-void print_percent(const T a, const T b)
+void print_percent(const T a, const T b) noexcept
 {
 	double rel = (double)a / (double)b;
 	rel *= 100;
@@ -55,6 +67,20 @@ void print_percent(const T a, const T b)
 		ts << "\r " << std::fixed << std::setprecision(1) << rel << "% ";
 }
 
+/*static inline void loadbar(unsigned int x, unsigned int n, unsigned int w = 50)
+{
+	if ( (x != n) && (x % (n/100) != 0) ) return;
+
+	float ratio  =  x/(float)n;
+	int   c      =  ratio * w;
+
+	cout << setw(3) << (int)(ratio*100) << "% [";
+	for (int x=0; x<c; x++) cout << "=";
+	for (int x=c; x<w; x++) cout << " ";
+	cout << "]\r" << flush;
+}*/
+
 template void print_percent<int>(int, int);
 template void print_percent<unsigned int>(unsigned int, unsigned int);
+template void print_percent<unsigned long>(unsigned long, unsigned long);
 

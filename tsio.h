@@ -62,21 +62,23 @@ public:
 		}
 		return I;
 	}
-	void lprintf(const char* format, ...) noexcept
+	int lprintf(const char* format, ...) noexcept
 	{
+		int ret;
 		va_list l;
 		va_start(l, format);
 		if (std::this_thread::get_id() == id && locked)
 		{
-			vprintf(format, l);
+			ret = vprintf(format, l);
 		}
 		else
 		{
 			p.lock();
-			vprintf(format, l);
+			ret = vprintf(format, l);
 			p.unlock();
 		}
 		va_end(l);
+		return ret;
 	}
 	void lock() noexcept
 	{

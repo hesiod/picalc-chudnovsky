@@ -14,48 +14,55 @@
 #include "pi.h"
 #include "tsio.h"
 #include "util.h"
+#include <cstdlib>
 #include <ncurses.h>
 
 using namespace std;
+using namespace picalc;
 
-void pi::do_calculate(const unsigned int phase, const unsigned int runs)
+void pi::do_calculate(const unsigned long phase, const unsigned long runs)
 {
 	thread_local mpf_class local_sum(0, precision);
-	thread_local mpf_class n(phase + 1, precision);
+	thread_local mpz_class n(phase + 1);
 	if (phase == 0)
 	{
 		ts.lock();
+
 		print_percent(0, 100);
 		chrono::time_point<chrono::high_resolution_clock> start = chrono::high_resolution_clock::now();
-		for (thread_local unsigned int i = 0; i <= runs; i++)
+		for (thread_local unsigned long i = 0; i <= runs; i++)
 		{
 			local_sum += (dividend / pow(n, 2));
 			n += threads;
-			print_percent(i, runs);
+			if ((i % 1000) > 0|| (i < 10000))
+				continue;
+
 			chrono::time_point<chrono::high_resolution_clock> middle = chrono::high_resolution_clock::now();
 			chrono::duration<double> runs_took = middle - start;
 			double rel = 1.0f / ((double)i / (double)runs);
-			chrono::duration<double> remaining = (runs_took * rel) - runs_took;
-			cout.unsetf(ios_base::floatfield);
-			initscr();
-			ts << "\tEstimated remaining time: " << setprecision(2) << remaining.count() << "s";
-			clrtoeol();
-			endwin();
-			// i / runs = 0.1
-			// runs_took = 1s
+			chrono::seconds remaining_s = chrono::duration_cast<chrono::seconds>((runs_took * rel) - runs_took);
+			chrono::minutes remaining_m = chrono::duration_cast<chrono::minutes>(remaining_s);
+			chrono::hours   remaining_h = chrono::duration_cast<chrono::hours>  (remaining_s);
+			remaining_s -= remaining_h + remaining_m;
+			remaining_m -= remaining_h;
+
+			clear_line();
+			ts.lprintf("\r");
+			print_percent(i, runs);
+			ts << fixed << setprecision(1) << "\tEstimated remaining time: " << remaining_h.count() << "h " << remaining_m.count() << "m " << remaining_s.count() << "s";
 		}
 		chrono::time_point<chrono::high_resolution_clock> end = chrono::high_resolution_clock::now();
 		chrono::duration<double> elapsed_seconds = end - start;
-		//time_t end_time = chrono::system_clock::to_time_t(end);
 		ts.lprintf("\n");
 		ts << "Calculation took " << fixed << setprecision(10) << elapsed_seconds.count() << "s" << endl;
 		(threads >= 10) ? (ts.lprintf("\r 0/%2u threads are finished.", threads)) : \
 			(ts.lprintf("\r0/%u threads are finished.", threads));
+
 		ts.unlock();
 	}
 	else
 	{
-		for (thread_local unsigned int i = 0; i <= runs; i++)
+		for (thread_local unsigned long i = 0; i <= runs; i++)
 		{
 			local_sum += (dividend / pow(n, 2));
 			n += threads;
@@ -67,14 +74,14 @@ void pi::do_calculate(const unsigned int phase, const unsigned int runs)
 		(ts.lprintf("\r%u/%u threads are finished.", finished_threads.load(), threads));
 }
 
-void pi::calculate(const unsigned int runs)
+void pi::calculate(const unsigned long runs)
 {
 	vector<thread> t (threads);
 
-	for (unsigned int phase = 0; phase < threads; phase++)
+	for (unsigned long phase = 0; phase < threads; phase++)
 	{
 		//ts << "Starting thread number " << phase + 1 << "." << endl;
-		t[phase] = thread([&] (const unsigned int _phase, const unsigned int _runs) { this->do_calculate(_phase, _runs); }, phase, runs);
+		t[phase] = thread([&] (const unsigned long _phase, const unsigned long _runs) { this->do_calculate(_phase, _runs); }, phase, runs);
 	}
 
 	join_all(t);

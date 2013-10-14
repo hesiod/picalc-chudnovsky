@@ -17,27 +17,27 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-	atexit(enable_cursor);
-	signal(SIGINT, static_cast<__sighandler_t>( [] (int) { enable_cursor(); exit(1); } ));
+	atexit([] () { enable_cursor(); cout << endl; });
+	signal(SIGINT, static_cast<__sighandler_t>( [] (int) { enable_cursor(); cout << endl; exit(1); } ));
 
-	unsigned int threadc;
-	unsigned int runc;
-	unsigned int prec;
+	unsigned long threadc;
+	unsigned long runc;
+	unsigned long prec;
 
 	try
 	{
 		TCLAP::CmdLine cmd("An arbitrary precision pi calculator using C++ and the GNU multiple precision library (GMP).", ' ', "0.1");
 
-		TCLAP::ValueArg<unsigned int> threadc_arg("j", "jobs", "number of threads to use", \
-			false, thread::hardware_concurrency(), "A positive non-zero integral number.", cmd);
+		TCLAP::ValueArg<unsigned long> threadc_arg("j", "jobs", "number of threads to use", \
+			false, thread::hardware_concurrency(), "A positive non-zero longegral number.", cmd);
 
-		TCLAP::ValueArg<unsigned int> runc_arg("r", "runs", "number of runs to perform (n of the equation)", \
-			false, 1000, "A positive non-zero integral number.", cmd);
+		TCLAP::ValueArg<unsigned long> runc_arg("r", "runs", "number of runs to perform (n of the equation)", \
+			false, 1000, "A positive non-zero longegral number.", cmd);
 
-		TCLAP::ValueArg<unsigned int> prec_arg("p", "prec", "precision of GMP float", \
-			false, 100000, "A positive non-zero integral number.", cmd);
+		TCLAP::ValueArg<unsigned long> prec_arg("p", "prec", "precision of GMP float", \
+			false, 10000, "A positive non-zero longegral number.", cmd);
 
-	//	TCLAP::SwitchArg reverseSwitch("r","reverse","Print name backwards", cmd, false);
+	//	TCLAP::SwitchArg reverseSwitch("r","reverse","Prlong name backwards", cmd, false);
 
 		// Parse the argv array.
 		cmd.parse(argc, argv);
@@ -57,13 +57,13 @@ int main(int argc, char* argv[])
 
 	cout << "Using " << threadc << " threads!" << endl;
 
-	pi p(prec, threadc);
+	picalc::pi p(prec, threadc);
 
 	p.calculate(runc);
 
-	//ts << p << endl;
+	ts << p << endl;
 
-	ts << p.digits() << endl;
+	//ts << p.digits() << endl;
 
 	return 0;
 }
