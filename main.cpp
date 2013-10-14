@@ -29,15 +29,15 @@ int main(int argc, char* argv[])
 		TCLAP::CmdLine cmd("An arbitrary precision pi calculator using C++ and the GNU multiple precision library (GMP).", ' ', "0.1");
 
 		TCLAP::ValueArg<unsigned long> threadc_arg("j", "jobs", "number of threads to use", \
-			false, thread::hardware_concurrency(), "A positive non-zero longegral number.", cmd);
+			false, thread::hardware_concurrency(), "A positive non-zero integral number.", cmd);
 
 		TCLAP::ValueArg<unsigned long> runc_arg("r", "runs", "number of runs to perform (n of the equation)", \
-			false, 1000, "A positive non-zero longegral number.", cmd);
+			false, 1000, "A positive non-zero integral number.", cmd);
 
 		TCLAP::ValueArg<unsigned long> prec_arg("p", "prec", "precision of GMP float", \
-			false, 10000, "A positive non-zero longegral number.", cmd);
+			false, 10000, "A positive non-zero integral number.", cmd);
 
-	//	TCLAP::SwitchArg reverseSwitch("r","reverse","Prlong name backwards", cmd, false);
+	//	TCLAP::SwitchArg reverseSwitch("r","reverse","Print name backwards", cmd, false);
 
 		// Parse the argv array.
 		cmd.parse(argc, argv);
