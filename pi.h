@@ -35,11 +35,6 @@ namespace picalc
 		{
 			return sqrt(6 * sum);
 		}
-		constexpr bool is_in_scope(const mpz_class n) const noexcept
-		{
-
-			return false;
-		}
 	public:
 		std::ostream& operator<<(std::ostream& out) const noexcept
 		{
