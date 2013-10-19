@@ -4,6 +4,7 @@ config.log
 .tags
 .tags_sorted_by_file
 pi
+*.sublime-*
 
 # Compiled Object files
 *.slo
