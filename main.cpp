@@ -18,7 +18,8 @@ using namespace std;
 int main(int argc, char* argv[])
 {
 	atexit([] () { enable_cursor(); cout << endl; });
-	signal(SIGINT, static_cast<__sighandler_t>( [] (int) { enable_cursor(); cout << endl; exit(1); } ));
+	//signal(SIGINT, static_cast<__sighandler_t>( [] (int) { enable_cursor(); cout << endl; exit(1); } ));
+	//signal(SIGSEGV, static_cast<__sighandler_t>( [] (int) { enable_cursor(); cout << endl << "Recieved SIGSEGV" << endl; exit(1); } ));
 
 	unsigned long threadc;
 	unsigned long runc;
@@ -53,7 +54,7 @@ int main(int argc, char* argv[])
 		terminate();
 	}
 
-	disable_cursor();
+	//disable_cursor();
 
 	cout << "Using " << threadc << " threads!" << endl;
 

@@ -9,6 +9,7 @@
 #include <iomanip>
 #include <vector>
 #include <thread>
+#include <future>
 #include <gmp.h>
 #include <gmpxx.h>
 #include "pi.h"
@@ -20,10 +21,52 @@
 using namespace std;
 using namespace picalc;
 
-void pi::do_calculate(const unsigned long phase, const unsigned long runs)
+void pi::calculate(const unsigned long runs)
 {
-	thread_local mpf_class local_sum(0, precision);
-	thread_local mpz_class n(phase + 1);
+	vector<thread> t (threads);
+	run_info r(runs, precision, 0, threads);
+
+	ts << "All threads are finished." << endl;
+
+	for (; r.phase < threads; r.phase++)
+	{
+		//ts << "Starting thread number " << r.phase + 1 << "." << endl;
+		t[r.phase] = thread(
+			[&] (run_info info)
+			{
+				euler e(info);
+				add_sum(e.get());
+				++finished_threads;
+				(threads >= 10) ? \
+				(ts.lprintf("\r%2u/%2u threads are finished.",	finished_threads.load(), threads)) : \
+				(ts.lprintf("\r%u/%u threads are finished.", 	finished_threads.load(), threads));
+			},
+			r);
+
+		/*
+		t[phase] = thread(
+			[&] (const unsigned long _phase, const unsigned long _runs)
+			{ this->do_calculate(_phase, _runs); }
+			, phase, runs);
+		*/
+	}
+
+	ts << "All threads are finisheasdfasdfd." << endl;
+
+	join_all(t);
+
+	ts << "blabal " << endl;
+
+	(threads >= 10) ? (ts.lprintf("\r%2u/%2u threads are finished.\n", finished_threads.load(), threads)) : \
+		(ts.lprintf("\r%u/%u threads are finished.\n", finished_threads.load(), threads));
+
+	ts << "All threads are finished." << endl;
+}
+
+/*void pi::do_calculate(const unsigned long phase, const unsigned long runs)
+{
+	mpf_class local_sum(0, precision);
+	mpz_class n(phase + 1);
 	if (phase == 0)
 	{
 		ts.lock();
@@ -72,22 +115,4 @@ void pi::do_calculate(const unsigned long phase, const unsigned long runs)
 	++finished_threads;
 	(threads >= 10) ? (ts.lprintf("\r%2u/%2u threads are finished.", finished_threads.load(), threads)) : \
 		(ts.lprintf("\r%u/%u threads are finished.", finished_threads.load(), threads));
-}
-
-void pi::calculate(const unsigned long runs)
-{
-	vector<thread> t (threads);
-
-	for (unsigned long phase = 0; phase < threads; phase++)
-	{
-		//ts << "Starting thread number " << phase + 1 << "." << endl;
-		t[phase] = thread([&] (const unsigned long _phase, const unsigned long _runs) { this->do_calculate(_phase, _runs); }, phase, runs);
-	}
-
-	join_all(t);
-
-	(threads >= 10) ? (ts.lprintf("\r%2u/%2u threads are finished.\n", finished_threads.load(), threads)) : \
-		(ts.lprintf("\r%u/%u threads are finished.\n", finished_threads.load(), threads));
-
-	ts << "All threads are finished." << endl;
-}
+}*/
