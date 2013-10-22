@@ -21,9 +21,8 @@ int main(int argc, char* argv[])
 	//signal(SIGINT, static_cast<__sighandler_t>( [] (int) { enable_cursor(); cout << endl; exit(1); } ));
 	//signal(SIGSEGV, static_cast<__sighandler_t>( [] (int) { enable_cursor(); cout << endl << "Recieved SIGSEGV" << endl; exit(1); } ));
 
-	unsigned long threadc;
+	picalc::run_info r;
 	unsigned long runc;
-	unsigned long prec;
 
 	try
 	{
@@ -44,9 +43,9 @@ int main(int argc, char* argv[])
 		cmd.parse(argc, argv);
 
 		// Get the value parsed by each arg.
-		threadc = threadc_arg.getValue();
+		r.threads = threadc_arg.getValue();
+		r.precision = prec_arg.getValue();
 		runc = runc_arg.getValue();
-		prec = prec_arg.getValue();
 	}
 	catch (TCLAP::ArgException &e)  // catch any exceptions
 	{
@@ -56,15 +55,16 @@ int main(int argc, char* argv[])
 
 	//disable_cursor();
 
-	cout << "Using " << threadc << " threads!" << endl;
+	cout << "Using " << r.threads << " threads!" << endl;
 
-	picalc::pi p(prec, threadc);
+	picalc::euler e(r);
+	picalc::pi p(e);
 
 	p.calculate(runc);
 
 	ts << p << endl;
 
-	//ts << p.digits() << endl;
+	ts << p.digits() << endl;
 
 	return 0;
 }

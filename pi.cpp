@@ -23,44 +23,9 @@ using namespace picalc;
 
 void pi::calculate(const unsigned long runs)
 {
-	vector<thread> t (threads);
-	run_info r(runs, precision, 0, threads);
-
-	ts << "All threads are finished." << endl;
-
-	for (; r.phase < threads; r.phase++)
-	{
-		//ts << "Starting thread number " << r.phase + 1 << "." << endl;
-		t[r.phase] = thread(
-			[&] (run_info info)
-			{
-				euler e(info);
-				add_sum(e.get());
-				++finished_threads;
-				(threads >= 10) ? \
-				(ts.lprintf("\r%2u/%2u threads are finished.",	finished_threads.load(), threads)) : \
-				(ts.lprintf("\r%u/%u threads are finished.", 	finished_threads.load(), threads));
-			},
-			r);
-
-		/*
-		t[phase] = thread(
-			[&] (const unsigned long _phase, const unsigned long _runs)
-			{ this->do_calculate(_phase, _runs); }
-			, phase, runs);
-		*/
-	}
-
-	ts << "All threads are finisheasdfasdfd." << endl;
-
-	join_all(t);
-
-	ts << "blabal " << endl;
-
-	(threads >= 10) ? (ts.lprintf("\r%2u/%2u threads are finished.\n", finished_threads.load(), threads)) : \
-		(ts.lprintf("\r%u/%u threads are finished.\n", finished_threads.load(), threads));
-
-	ts << "All threads are finished." << endl;
+	calc.calculate(runs);
+	std::future<mpf_class> f = std::async(std::launch::async, [&] () { actual = calc.actual(); return actual; });
+	f.wait();
 }
 
 /*void pi::do_calculate(const unsigned long phase, const unsigned long runs)

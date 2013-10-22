@@ -19,52 +19,50 @@ namespace picalc
 {
 	struct run_info
 	{
-		unsigned long runs;
-		unsigned long precision;
+		mp_bitcnt_t precision;
 		unsigned long phase;
 		unsigned long threads;
-		run_info(unsigned long r, unsigned long pr, unsigned long ph, unsigned long t) \
-			: runs(r), precision(pr), phase(ph), threads(t)
+		run_info() \
+			: precision(0),  phase(0),  threads(0)
+		{ }
+		run_info(unsigned long pr, unsigned long ph, unsigned long t) \
+			: precision(pr), phase(ph), threads(t)
 		{ }
 	};
 
-	template <typename RT>
 	class calculator
 	{
 	private:
 		calculator();
 	public:
-		calculator(run_info) { }
-		//virtual bool try_get() const = 0;
-		//virtual RT get() const = 0;
-		virtual std::future<mpf_class> get_future() = 0;
-		virtual double get_progress() const = 0;
-		virtual ~calculator() { }
+					calculator(run_info)			{ }
+		virtual 		~calculator()				{ }
+		virtual double		get_progress() const			= 0;
+		virtual void		calculate(const unsigned long)		= 0;
+		virtual const mpf_class	actual()				= 0;
 	};
 
-	class euler final : calculator<mpf_class>
+	class euler : public calculator
 	{
 	private:
 		const unsigned int dividend = 1;
 		run_info info;
 		mpf_class sum;
 		unsigned long i;
+		unsigned long runs;
 		std::mutex m;
+		std::atomic<unsigned long> finished_threads;
+		std::vector<std::thread> t;
 		void add_sum(const mpf_class origin)
 		{
 			std::unique_lock<std::mutex> lock (m);
 			sum += origin;
 		}
-		std::promise<mpf_class> pi;
-		mpf_class actual() const noexcept
-		{
-			return sqrt(6 * sum);
-		}
-		mpf_class do_calculate(unsigned long phase)
+		mpf_class do_calculate(const unsigned long phase)
 		{
 			mpz_class n(phase + 1);
 			mpf_class ret(0, info.precision);
-			for (; i <= info.runs; i++)
+			for (; i <= runs; i++)
 			{
 				ret += (dividend / pow(n, 2));
 				n += info.threads;
@@ -73,34 +71,36 @@ namespace picalc
 			return ret;
 		}
 	public:
-		std::future<mpf_class> get_future()
+		const mpf_class actual()
 		{
-			return pi.get_future();
+			join_all(t);
+			return sqrt(6 * sum);
 		}
 		double get_progress() const
 		{
-			double rel = (double)i / (double)info.runs;
+			double rel = (double)i / (double)runs;
 			return rel;
 		}
-		void calculate()
+		void calculate(const unsigned long _runs)
 		{
-			std::vector<std::thread> t (info.threads);
-
+			runs = _runs;
 			for (; info.phase < info.threads; info.phase++)
 			{
-				t[info.phase] = std::thread(
+				t.push_back(std::thread(
 					[&] ()
 					{
 						add_sum(do_calculate(info.phase));
-					},
-					info);
+						++finished_threads;
+						(info.threads >= 10) ? \
+						(ts.lprintf("\r%2u/%2u threads are finished.",	finished_threads.load(), info.threads)) : \
+						(ts.lprintf("\r%u/%u threads are finished.", 	finished_threads.load(), info.threads));
+					}));
 			}
 
-			join_all(t);
-
-			pi.set_value(sqrt(sum * 6));
+			//(info.threads >= 10) ? (ts.lprintf("\r%2u/%2u threads are finished.\n", finished_threads.load(), info.threads)) : \
+			//	(ts.lprintf("\r%u/%u threads are finished.\n", finished_threads.load(), info.threads));
 		}
-		euler(const run_info r) : calculator(r), info(r), i(0)
+		euler(const run_info r) : calculator(r), info(r), i(0), runs(0), finished_threads(0)
 		{
 		}
 		~euler()
@@ -111,49 +111,37 @@ namespace picalc
 	class pi
 	{
 	private:
-		std::mutex m;
-		void do_calculate(const unsigned long phase, const unsigned long runs);
-		unsigned long precision;
-		unsigned long threads;
-		const unsigned int dividend = 1;
-		std::atomic<unsigned long> finished_threads;
+		mpf_class actual;
+		calculator& calc;
 	public:
 		std::ostream& operator<<(std::ostream& out) const noexcept
 		{
 			std::terminate();
 			mp_exp_t exponent;
-			std::string outstr = mpf_get_str(NULL, &exponent, 10, 0, actual().get_mpf_t());
+			std::string outstr = mpf_get_str(NULL, &exponent, 10, 0, actual.get_mpf_t());
 			out << outstr << "e" << exponent;
 			return out;
 		}
 		friend std::ostream& operator<<(std::ostream& out, const pi& p) noexcept
 		{
 			mp_exp_t exponent;
-			std::string outstr = mpf_get_str(NULL, &exponent, 10, 0, p.actual().get_mpf_t());
+			std::string outstr = mpf_get_str(NULL, &exponent, 10, 0, p.actual.get_mpf_t());
 			out << outstr << "e" << exponent;
 			return out;
 		}
 		size_t digits() const noexcept
 		{
 			mp_exp_t exponent;
-			std::string outstr = mpf_get_str(NULL, &exponent, 10, 0, actual().get_mpf_t());
+			std::string outstr = mpf_get_str(NULL, &exponent, 10, 0, actual.get_mpf_t());
 			return outstr.size();
 		}
-		pi() : precision(100000), threads(1), finished_threads(0)
+		pi(calculator& _calc) : calc(_calc)
 		{
-		}
-		pi(mp_bitcnt_t _precision) : precision(_precision), threads(1), finished_threads(0)
-		{
-		}
-		pi(mp_bitcnt_t _precision, unsigned long thread_count) : precision(_precision), threads(thread_count), finished_threads(0)
-		{
-			if (threads < 1)
-				throw std::invalid_argument("At least one thread is needed!");
 		}
 		~pi()
 		{
 		}
-		void calculate(unsigned long runs);
+		void calculate(const unsigned long runs);
 	};
 };
 
