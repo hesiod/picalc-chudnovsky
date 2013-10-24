@@ -23,9 +23,33 @@ using namespace picalc;
 
 void pi::calculate(const unsigned long runs)
 {
-	calc.calculate(runs);
-	std::future<mpf_class> f = std::async(std::launch::async, [&] () { actual = calc.actual(); return actual; });
-	f.wait();
+	cout << "Calculating..." << endl;
+	calc->calculate(runs);
+	cout << "Constructing future..." << endl;
+	/*std::future<mpf_class> f = std::async(std::launch::async,
+		[&] ()
+		{
+			actual = calc->actual();
+			return actual;
+		});*/
+	std::thread t(
+		[&] ()
+		{
+			actual = calc->actual();
+			return actual;
+		});
+	cout << "Waiting..." << endl;
+	/*double prog;
+	do
+	{
+		prog = calc->get_progress();
+		print_percent(prog);
+	} while (prog < 1);
+	print_percent(1);
+	f.wait();*/
+	t.join();
+	cout << endl << "All threads are finished." << endl;
+	finished = true;
 }
 
 /*void pi::do_calculate(const unsigned long phase, const unsigned long runs)
@@ -34,7 +58,7 @@ void pi::calculate(const unsigned long runs)
 	mpz_class n(phase + 1);
 	if (phase == 0)
 	{
-		ts.lock();
+		cout.lock();
 
 		print_percent(0, 100);
 		chrono::time_point<chrono::high_resolution_clock> start = chrono::high_resolution_clock::now();
@@ -55,18 +79,18 @@ void pi::calculate(const unsigned long runs)
 			remaining_m -= remaining_h;
 
 			clear_line();
-			ts.lprintf("\r");
+			cout.lprintf("\r");
 			print_percent(i, runs);
-			ts << fixed << setprecision(1) << "\tEstimated remaining time: " << remaining_h.count() << "h " << remaining_m.count() << "m " << remaining_s.count() << "s";
+			cout << fixed << setprecision(1) << "\tEstimated remaining time: " << remaining_h.count() << "h " << remaining_m.count() << "m " << remaining_s.count() << "s";
 		}
 		chrono::time_point<chrono::high_resolution_clock> end = chrono::high_resolution_clock::now();
 		chrono::duration<double> elapsed_seconds = end - start;
-		ts.lprintf("\n");
-		ts << "Calculation took " << fixed << setprecision(10) << elapsed_seconds.count() << "s" << endl;
-		(threads >= 10) ? (ts.lprintf("\r 0/%2u threads are finished.", threads)) : \
-			(ts.lprintf("\r0/%u threads are finished.", threads));
+		cout.lprintf("\n");
+		cout << "Calculation took " << fixed << setprecision(10) << elapsed_seconds.count() << "s" << endl;
+		(threads >= 10) ? (cout.lprintf("\r 0/%2u threads are finished.", threads)) : \
+			(cout.lprintf("\r0/%u threads are finished.", threads));
 
-		ts.unlock();
+		cout.unlock();
 	}
 	else
 	{
@@ -78,6 +102,6 @@ void pi::calculate(const unsigned long runs)
 	}
 	add_sum(local_sum);
 	++finished_threads;
-	(threads >= 10) ? (ts.lprintf("\r%2u/%2u threads are finished.", finished_threads.load(), threads)) : \
-		(ts.lprintf("\r%u/%u threads are finished.", finished_threads.load(), threads));
+	(threads >= 10) ? (cout.lprintf("\r%2u/%2u threads are finished.", finished_threads.load(), threads)) : \
+		(cout.lprintf("\r%u/%u threads are finished.", finished_threads.load(), threads));
 }*/

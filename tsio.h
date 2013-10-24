@@ -89,7 +89,9 @@ tsio& sync(tsio& os)
 //template <std::istream& I, std::ostream& O>
 //std::mutex tsio<I, O>::p;
 
-extern tsio<std::cin, std::cout> ts;
+
+//#define ts 	cout
+//extern tsio<std::cin, std::cout> ts;
 
 /*template <typename T>
 	ostr& operator<<(const T& t)

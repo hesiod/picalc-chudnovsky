@@ -55,16 +55,18 @@ int main(int argc, char* argv[])
 
 	//disable_cursor();
 
-	cout << "Using " << r.threads << " threads!" << endl;
+	cout << "Using " << r.threads << " thread(s)!" << endl;
 
-	picalc::euler e(r);
+	picalc::euler * e = new picalc::euler(r);
 	picalc::pi p(e);
 
 	p.calculate(runc);
 
-	ts << p << endl;
+	cout << p << endl;
 
-	ts << p.digits() << endl;
+	cout << p.digits() << endl;
+
+	delete e;
 
 	return 0;
 }

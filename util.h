@@ -14,9 +14,16 @@
 #include "tsio.h"
 #include "util.h"
 
-mpf_class pow(const mpf_class src, const unsigned long int exp) noexcept;
+static inline const mpf_class pow(const mpf_class src, const unsigned long int exp) noexcept
+{
+	//print_percent(0,100);
+	thread_local mpf_class tmp;
+	mpf_pow_ui(tmp.get_mpf_t(), src.get_mpf_t(), exp);
+	return tmp;
+}
 
 template<typename T> void print_percent(const T a, const T b) noexcept;
+void print_percent(double rel) noexcept;
 
 void join_all(std::vector<std::thread>& v);
 

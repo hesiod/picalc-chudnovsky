@@ -14,18 +14,11 @@
 
 using namespace std;
 
-mpf_class pow(const mpf_class src, const unsigned long int exp) noexcept
-{
-	//print_percent(0,100);
-	mpf_class tmp;
-	mpf_pow_ui(tmp.get_mpf_t(), src.get_mpf_t(), exp);
-	return tmp;
-}
-
 void join_all(vector<thread>& v)
 {
 	for (auto& t : v)
-		t.join();
+		if (t.joinable())
+			t.join();
 }
 
 void enable_cursor()
@@ -58,13 +51,26 @@ void print_percent(const T a, const T b) noexcept
 	double rel = (double)a / (double)b;
 	rel *= 100;
 	if (rel == 0.0f)
-		ts << "\r  0.0% ";
+		cout << "\r  0.0% " << std::flush;
 	else if (rel == 100.0f)
-		ts << "\r100.0% ";
+		cout << "\r100.0% " << std::flush;
 	else if (rel < 10.0f)
-		ts << "\r  " << std::fixed << std::setprecision(1) << rel << "% ";
+		cout << "\r  " << std::fixed << std::setprecision(1) << rel << "% " << std::flush;
 	else
-		ts << "\r " << std::fixed << std::setprecision(1) << rel << "% ";
+		cout << "\r " << std::fixed << std::setprecision(1) << rel << "% " << std::flush;
+}
+
+void print_percent(double rel) noexcept
+{
+	rel *= 100;
+	if (rel == 0.0f)
+		cout << "\r  0.0% " << std::flush;
+	else if (rel == 100.0f)
+		cout << "\r100.0% " << std::flush;
+	else if (rel < 10.0f)
+		cout << "\r  " << std::fixed << std::setprecision(1) << rel << "% " << std::flush;
+	else
+		cout << "\r " << std::fixed << std::setprecision(1) << rel << "% " << std::flush;
 }
 
 /*static inline void loadbar(unsigned int x, unsigned int n, unsigned int w = 50)
