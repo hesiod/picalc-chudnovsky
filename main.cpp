@@ -57,16 +57,13 @@ int main(int argc, char* argv[])
 
 	cout << "Using " << r.threads << " thread(s)!" << endl;
 
-	picalc::euler * e = new picalc::euler(r);
-	picalc::pi p(e);
+	picalc::pi p(r, runc);
 
-	p.calculate(runc);
+	//p.calculate(runc);
 
-	cout << p << endl;
+	//cout << p << endl;
 
-	cout << p.digits() << endl;
-
-	delete e;
+	//cout << p.digits() << endl;
 
 	return 0;
 }

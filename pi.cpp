@@ -21,37 +21,6 @@
 using namespace std;
 using namespace picalc;
 
-void pi::calculate(const unsigned long runs)
-{
-	cout << "Calculating..." << endl;
-	calc->calculate(runs);
-	cout << "Constructing future..." << endl;
-	/*std::future<mpf_class> f = std::async(std::launch::async,
-		[&] ()
-		{
-			actual = calc->actual();
-			return actual;
-		});*/
-	std::thread t(
-		[&] ()
-		{
-			actual = calc->actual();
-			return actual;
-		});
-	cout << "Waiting..." << endl;
-	/*double prog;
-	do
-	{
-		prog = calc->get_progress();
-		print_percent(prog);
-	} while (prog < 1);
-	print_percent(1);
-	f.wait();*/
-	t.join();
-	cout << endl << "All threads are finished." << endl;
-	finished = true;
-}
-
 /*void pi::do_calculate(const unsigned long phase, const unsigned long runs)
 {
 	mpf_class local_sum(0, precision);
