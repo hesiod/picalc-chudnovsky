@@ -32,7 +32,6 @@ namespace picalc
 	class chudnovsky
 	{
 	private:
-#if 0
 		static inline const mpfr::mpreal for_k(const unsigned int k)
 		{
 			// -1 ^ k
@@ -43,53 +42,18 @@ namespace picalc
 			// (13591409 + 545140134k)
 			// /
 			// 640320^3k
-
-			mpfr::mpreal a = mpfr::fac_ui(6 * k)		/ \
-		(	pow(mpfr::fac_ui(k), 3) * mpfr::fac_ui(3 * k)	)	;
-
-			mpfr::mpreal b = (13591409 + (545140134 * k))	/ \
-		(	pow(640320, mpfr::fac_ui(3 * k))		)	;
-
-			return mpfr::pow((-1), k);
-		}
-		static inline const mpfr::mpreal pi_for(const mpfr::mpreal sum)
-		{
-			const mpfr::mpreal c = mpfr::sqrt(10005) / 4270934400;
-			return mpfr::pow(c * sum, (-1));
-		}
-#endif
-		static inline const mpfr::mpreal for_k(const unsigned int k)
-		{
-			// -1 ^ k
-			// (6k)!
-			// /
-			// (k!)^3 * (3k)!
-			// *
-			// (13591409 + 545140134k)
-			// /
-			// 640320^3k
-// mpfr::pow(-1.0, k) * 
 			mpfr::mpreal a =	mpfr::pow(-1.0, k) *			\
 			(mpfr::fac_ui(6.0 * k) * (13591409.0 + (545140134.0 * k)))	\
 			/								\
 			(mpfr::fac_ui(3.0 * k) * mpfr::pow(mpfr::fac_ui(k), 3.0) *	\
 			mpfr::pow(640320.0, 3.0 * k));
-			/*
-			(mpfr::pow(-1.0, k))					\
-			(mpfr::fac_ui(6.0 * k) / (mpfr::pow(mpfr::fac_ui(k), 3.0) * mpfr::fac_ui(3.0 * k))) \
-		*	((13591409.0 + (545140134.0 * k)) / mpfr::pow(-640320.0, 3.0 * k));*/
-		
-			// + 3.0 / 2.0
 		
 
 			return a;
 		}
 		static inline const mpfr::mpreal pi_for(const mpfr::mpreal sum)
 		{
-			//mpfr::mpreal c = mpfr::sqrt(10005.0) * 426880.0; // 4270934400.0
-			return ((mpfr::sqrt(10005.0) * 426880.0) / sum);
-			//return mpfr::pow((mpfr::sqrt(mpfr::mpreal(10005.0, ) / 4270934400.0) * sum, (-1.0));
-			//return mpfr::pow(12 * sum, (-1))
+			return mpfr::pow((mpfr::sqrt(10005.0) / 4270934400.0) * sum, (-1.0));
 		}
 		static inline const mpfr::mpreal exp_mod(const mpfr::mpreal b, mpfr::mpreal n, const mpfr::mpreal k)
 		{
@@ -155,7 +119,7 @@ namespace picalc
 			mpfr::mpreal::set_default_prec(info.precision);
 			mpfr::mpreal sum = 0;
 
-			/*for (unsigned int ph = 0; ph < threadc; ph++)
+			for (unsigned int ph = 0; ph < threadc; ph++)
 			{
 				t[ph] = std::thread( [&] (unsigned int phase)
 					{
@@ -163,25 +127,18 @@ namespace picalc
 						{
 							mpfr::mpreal tmp = for_k(k);
 							std::unique_lock<std::mutex> lock (m);
-							std::cout << tmp << std::endl;
+							//std::cout << tmp << std::endl;
 							sum += tmp;
 						}
 					}, ph);
-			}*/
-			for (unsigned int k = 0; k < runs; k++)
+			}
+			/*for (unsigned int k = 0; k < runs; k++)
 			{
 				mpfr::mpreal tmp = for_k(k);
 				std::unique_lock<std::mutex> lock (m);
 				std::cout << tmp << std::endl;
 				sum += tmp;
-			}
-#if 0
-1415926535 897932
-     2654824574366918
-           247719318987069
-              9635091037931047
-1415926535 8979323846 2643383279 5028841971 6939937510
-#endif
+			}*/
 			std::cout.precision(16);
 			for (unsigned int k = 0; k < 10; k++)
 			{
@@ -189,12 +146,11 @@ namespace picalc
 				printf("%014lx\n", (unsigned long int)(bbp_for(k).toLDouble() * 72057594037927936.0));
 			}
 			join_all(t);
-			mpfr::mpreal pi = mpfr::pow((mpfr::sqrt(10005.0) / 4270934400.0) * sum, (-1.0));
-			//mpfr::mpreal pi = pi_for(sum);
+			mpfr::mpreal pi = pi_for(sum);
 			std::cout.precision(128);
 			std::cout << pi << std::endl;
 		}
-		chudnovsky(const run_info r) : info(r), threadc(std::thread::hardware_concurrency()), t(threadc)
+		chudnovsky(const run_info r) : info(r), threadc(r.threads), t(threadc)
 		{
 		}
 		~chudnovsky()
