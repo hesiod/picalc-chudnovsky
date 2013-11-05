@@ -68,51 +68,80 @@ namespace picalc
 			// (13591409 + 545140134k)
 			// /
 			// 640320^3k
-
-			mpfr::mpreal a =						\
-		(									\
-			mpfr::pow(-1.0f, k) * mpfr::fac_ui(6.0f * k) * 			\
-			(13591409.0f + (545140134.0f * k))				\
-		)	/								\
-		(									\
-			mpfr::fac_ui(3.0f * k) * mpfr::pow(mpfr::fac_ui(k), 3.0f) *	\
-			mpfr::pow(640320.0f, 3.0f * k + 3.0f / 2.0f)			\
-		);
-			// + 3.0f / 2.0f
+// mpfr::pow(-1.0, k) * 
+			mpfr::mpreal a =	mpfr::pow(-1.0, k) *			\
+			(mpfr::fac_ui(6.0 * k) * (13591409.0 + (545140134.0 * k)))	\
+			/								\
+			(mpfr::fac_ui(3.0 * k) * mpfr::pow(mpfr::fac_ui(k), 3.0) *	\
+			mpfr::pow(640320.0, 3.0 * k));
+			/*
+			(mpfr::pow(-1.0, k))					\
+			(mpfr::fac_ui(6.0 * k) / (mpfr::pow(mpfr::fac_ui(k), 3.0) * mpfr::fac_ui(3.0 * k))) \
+		*	((13591409.0 + (545140134.0 * k)) / mpfr::pow(-640320.0, 3.0 * k));*/
+		
+			// + 3.0 / 2.0
 		
 
 			return a;
 		}
 		static inline const mpfr::mpreal pi_for(const mpfr::mpreal sum)
 		{
-			//const mpfr::mpreal c = 1 / (mpfr::sqrt(10005.0f) / 426880.0f);
-			//return mpfr::pow(c * sum, (-1));
-			return mpfr::pow(12 * sum, (-1));
+			//mpfr::mpreal c = mpfr::sqrt(10005.0) * 426880.0; // 4270934400.0
+			return ((mpfr::sqrt(10005.0) * 426880.0) / sum);
+			//return mpfr::pow((mpfr::sqrt(mpfr::mpreal(10005.0, ) / 4270934400.0) * sum, (-1.0));
+			//return mpfr::pow(12 * sum, (-1))
 		}
-		static inline const mpfr::mpreal sum_for(const mpfr::mpreal n, const mpfr::mpreal l)
+		static inline const mpfr::mpreal exp_mod(const mpfr::mpreal b, mpfr::mpreal n, const mpfr::mpreal k)
 		{
-			mpfr::mpreal sum;
+			mpfr::mpreal r = 1.0;
+			mpfr::mpreal t = 0.0;
+			unsigned int i;
+			for (i = 0; t <= n; i++)
+			{
+				t = mpfr::pow(2.0, i);
+			}
+			i--;
+			t = mpfr::pow(2.0, i);
+			while (1)
+			{
+				if (n >= t)
+				{
+					r = mpfr::mod(b * r, k);
+					n -= t;
+				}
+				t /= 2.0;
+				if (t >= 1.0)
+				{
+					r = mpfr::mod(mpfr::pow(r, 2.0), k);
+				}
+				else
+					break;
+			}
+			return r;
+		}
+		const mpfr::mpreal sum_for(const mpfr::mpreal n, const mpfr::mpreal j)
+		{
+			mpfr::mpreal a, b;
 
 			for (mpfr::mpreal k = 0; k <= n; k++)
 			{
-				sum += mpfr::mod(mpfr::pow(16.0f, n - k), (8.0f * k) + l) / \
-				((8.0f * k) + l);
+				//sum += mpfr::mod(mpfr::pow(16.0, n - k), (8.0 * k) + j) / ((8.0 * k) + j);
+				a += exp_mod(16.0, n - k, (8.0 * k) + j) / ((8.0 * k) + j);
 			}
-			for (mpfr::mpreal k = n + 1; k <= n + 8; k++)
+			for (mpfr::mpreal k = n + 1.0; k <= n + 32.0; k++)
 			{
-				sum += mpfr::pow(16.0f, n - k) / \
-				(8.0f * k + l);
+				b += mpfr::pow(16.0, n - k) / (8.0 * k + j);
 			}
 
-			return sum;
+			return a + b;
 		}
-		static inline const mpfr::mpreal bbp_for(const mpfr::mpreal n)
+		const mpfr::mpreal bbp_for(const mpfr::mpreal n)
 		{
-			mpfr::mpreal a =	(4.0f * sum_for(n, 1)) \
-					-	(2.0f * sum_for(n, 4)) \
-					-	(1.0f * sum_for(n, 5)) \
-					-	(1.0f * sum_for(n, 6));
-			a = a - mpfr::floor(a);
+			mpfr::mpreal a =	(4.0 * sum_for(n, 1)) \
+					-	(2.0 * sum_for(n, 4)) \
+					-	(1.0 * sum_for(n, 5)) \
+					-	(1.0 * sum_for(n, 6));
+			a = mpfr::mod(a, 1.0);
 			return a;
 		}
 		std::mutex m;
@@ -126,25 +155,43 @@ namespace picalc
 			mpfr::mpreal::set_default_prec(info.precision);
 			mpfr::mpreal sum = 0;
 
-			for (unsigned int ph = 0; ph < threadc; ph++)
+			/*for (unsigned int ph = 0; ph < threadc; ph++)
 			{
 				t[ph] = std::thread( [&] (unsigned int phase)
 					{
-						for (unsigned int k = phase; k <= runs; k += threadc)
+						for (unsigned int k = phase; k < runs; k += threadc)
 						{
-							const mpfr::mpreal tmp = for_k(k);
+							mpfr::mpreal tmp = for_k(k);
 							std::unique_lock<std::mutex> lock (m);
+							std::cout << tmp << std::endl;
 							sum += tmp;
 						}
 					}, ph);
+			}*/
+			for (unsigned int k = 0; k < runs; k++)
+			{
+				mpfr::mpreal tmp = for_k(k);
+				std::unique_lock<std::mutex> lock (m);
+				std::cout << tmp << std::endl;
+				sum += tmp;
 			}
-			/*for (unsigned int k = 0; k < 10; k++)
+#if 0
+1415926535 897932
+     2654824574366918
+           247719318987069
+              9635091037931047
+1415926535 8979323846 2643383279 5028841971 6939937510
+#endif
+			std::cout.precision(16);
+			for (unsigned int k = 0; k < 10; k++)
 			{
 				std::cout << bbp_for(k) << std::endl;
-			}*/
+				printf("%014lx\n", (unsigned long int)(bbp_for(k).toLDouble() * 72057594037927936.0));
+			}
 			join_all(t);
-			mpfr::mpreal pi = pi_for(sum);
-			std::cout.precision(256);
+			mpfr::mpreal pi = mpfr::pow((mpfr::sqrt(10005.0) / 4270934400.0) * sum, (-1.0));
+			//mpfr::mpreal pi = pi_for(sum);
+			std::cout.precision(128);
 			std::cout << pi << std::endl;
 		}
 		chudnovsky(const run_info r) : info(r), threadc(std::thread::hardware_concurrency()), t(threadc)
