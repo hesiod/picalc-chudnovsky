@@ -56,6 +56,8 @@ int main(int argc, char* argv[])
 	//disable_cursor();
 
 	cout << "Using " << r.threads << " thread(s)!" << endl;
+	cout << "Precision is " << r.precision << "." << endl;
+	cout << "Doing " << runc << " runs." << endl;
 
 	picalc::pi p(r, runc);
 
