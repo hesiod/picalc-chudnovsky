@@ -9,7 +9,11 @@
 
 #include <atomic>
 #include <iostream>
+#include <sstream>
+#include <fstream>
+#include <string>
 #include <cstdarg>
+#include <cmath>
 #include <stdexcept>
 #include "mpreal.h"
 #include "util.h"
@@ -85,19 +89,19 @@ namespace picalc
 		}
 		const mpfr::mpreal sum_for(const mpfr::mpreal n, const mpfr::mpreal j)
 		{
-			mpfr::mpreal a, b;
+			mpfr::mpreal sum;
 
 			for (mpfr::mpreal k = 0; k <= n; k++)
 			{
 				//sum += mpfr::mod(mpfr::pow(16.0, n - k), (8.0 * k) + j) / ((8.0 * k) + j);
-				a += exp_mod(16.0, n - k, (8.0 * k) + j) / ((8.0 * k) + j);
+				sum += exp_mod(16.0, n - k, (8.0 * k) + j) / ((8.0 * k) + j);
 			}
 			for (mpfr::mpreal k = n + 1.0; k <= n + 32.0; k++)
 			{
-				b += mpfr::pow(16.0, n - k) / (8.0 * k + j);
+				sum += mpfr::pow(16.0, n - k) / (8.0 * k + j);
 			}
 
-			return a + b;
+			return sum;
 		}
 		const mpfr::mpreal bbp_for(const mpfr::mpreal n)
 		{
@@ -112,6 +116,68 @@ namespace picalc
 		run_info info;
 		unsigned int threadc;
 		std::vector<std::thread> t;
+		std::string ieee_float_to_hex(float f)
+		{
+			static_assert(std::numeric_limits<float>::is_iec559, "native float must be an IEEE float");
+
+			union { float fval; std::uint32_t ival; };
+			fval = f;
+
+			std::ostringstream stm;
+			stm << std::hex << std::uppercase << ival;
+
+			return stm.str();
+		}
+
+		unsigned int hex_at(const mpfr::mpreal x, unsigned int k, unsigned int len = 8)
+		{
+			/*std::string s = r.toString();
+		std::cout << s << std::endl;
+			unsigned int idx = s.find('.');
+		std::cout << idx << std::endl;
+			s = s.substr(idx + 1);
+			k -= idx + 1;
+		std::cout << s << std::endl;
+			unsigned int x = std::stoi(s.substr(k, 8));
+		std::cout << x << std::endl;*/
+
+			/*for (unsigned int j = 1; j < k; j++)
+			{
+				//s = s.insert(0, )
+			}*/
+			std::cout << "1" << std::endl;
+			mpfr::mpreal r = x;
+			r -= mpfr::trunc(r);
+			mpfr::mpreal tmp = r;
+			std::string result;
+			std::cout << "2" << std::endl;
+			for (; len > 0; len--)
+			{
+				r *= 16.0;
+				result.append(to_string<unsigned int>((unsigned long)mpfr::trunc(r).toULong(), std::hex));
+				r -= mpfr::trunc(r);
+				if (r == 0.0)
+					break;
+			}
+			std::cout << "3" << std::endl;
+			//std::cout << result << std::endl;
+
+			std::cout << result << std::endl;
+			std::cout << result.substr(k, 8) << " " << k << std::endl;
+			return std::stoi(result.substr(k, 8), nullptr, 16);
+			
+			/*float tmp = ldexp(std::stof(s.substr(0, 2)) * 0.01, 4);
+			float last;
+			std::string result;
+			for (unsigned int j = 1; j < k; j++)
+			{
+				tmp = ldexp(std::stof(s.substr(j, 2)), 4);
+				result.append(to_string<unsigned int>(tmp, std::hex));
+				last = tmp - std::trunc(tmp);
+			}*/
+
+			//return 0;
+		}
 	protected:
 	public:
 		void calculate(const unsigned int runs)
@@ -132,23 +198,41 @@ namespace picalc
 						}
 					}, ph);
 			}
-			/*for (unsigned int k = 0; k < runs; k++)
-			{
-				mpfr::mpreal tmp = for_k(k);
-				std::unique_lock<std::mutex> lock (m);
-				std::cout << tmp << std::endl;
-				sum += tmp;
-			}*/
-			std::cout.precision(16);
-			for (unsigned int k = 0; k < 10; k++)
+
+			//std::cout.precision(16);
+			/*for (unsigned int k = 0; k < 10; k++)
 			{
 				std::cout << bbp_for(k) << std::endl;
 				printf("%014lx\n", (unsigned long int)(bbp_for(k).toLDouble() * 72057594037927936.0));
-			}
+			}*/
 			join_all(t);
 			mpfr::mpreal pi = pi_for(sum);
-			std::cout.precision(128);
-			std::cout << pi << std::endl;
+
+			unsigned long correct_digits = 0;
+			for (unsigned int k = 0; k < pi.toString().size(); k++)
+			{
+			//	std::cout << std::hex << hex_at(bbp_for(k), 0, 1) << std::endl;
+			//	std::cout << std::hex << bbp_for(k).toLDouble() * 72057594037927936.0 << std::endl << hex_at(pi, k) * 72057594037927936.0 << std::endl;
+			//	std::cout << std::hex << bbp_for(k).toString().substr(0, 1) << std::endl << std::to_string(hex_at(pi, k)).substr(0, 1) << std::endl;
+				std::cout << "a" << std::endl;
+				if (hex_at(bbp_for(k), 0, 1) == hex_at(pi, 0, 1))
+					correct_digits++;
+				else
+					break;
+				std::cout << "b" << std::endl;
+				/*if (bbp_for(k).toString().substr(0, 1) == std::to_string(hex_at(pi, k)).substr(0, 1))
+					correct_digits++;*/
+			}
+			std::cout.precision(14);
+			std::cout << std::hex << (unsigned long int)(bbp_for(0).toLDouble() * 72057594037927936.0) << std::dec << std::endl;
+			std::cout << "Correct digits: " << correct_digits << std::endl;
+			std::cout.precision(1024);
+			std::stringstream ss;
+			ss << pi;
+			std::cout << ss.str() << std::endl;
+			std::cout << "Buffer Length: " << ss.str().size() << std::endl;
+			std::cout << std::hex << hex_at(pi, 0) << std::endl;
+			printf("%014lx\n", (unsigned long int)(bbp_for(0).toLDouble() * 72057594037927936.0));
 		}
 		chudnovsky(const run_info r) : info(r), threadc(r.threads), t(threadc)
 		{
