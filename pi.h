@@ -180,15 +180,15 @@ namespace picalc
 
 			for (unsigned int phase = 0; phase < threadc; phase++)
 			{
-				t[phase] = std::thread( [&] ()
+				t[phase] = std::thread( [&] (unsigned int ph)
 					{
-						for (; j.load() < runs; j++)
+						for (unsigned int k = ph; k < runs; k += threadc)
 						{
-							mpfr::mpreal tmp = for_k(j);
+							mpfr::mpreal tmp = for_k(k);
 							std::unique_lock<std::mutex> lock (m);
 							sum += tmp;
 						}
-					} );
+					}, phase );
 			}
 
 			join_all(t);
