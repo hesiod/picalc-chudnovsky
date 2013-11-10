@@ -53,6 +53,8 @@ int main(int argc, char* argv[])
 		terminate();
 	}
 
+	mpfr::mpreal::set_default_prec(r.precision);
+
 	//disable_cursor();
 
 	cout << "Using " << r.threads << " thread(s)!" << endl;

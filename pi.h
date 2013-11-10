@@ -36,35 +36,7 @@ namespace picalc
 	class chudnovsky
 	{
 	private:
-		static inline const mpfr::mpreal for_k(const unsigned int k)
-		{
-			// -1 ^ k
-			// (6k)!
-			// /
-			// (k!)^3 * (3k)!
-			// *
-			// (13591409 + 545140134k)
-			// /
-			// 640320^3k
-			/*mpfr::mpreal a = mpfr::pow(-1.0, k) *				\
-			(mpfr::fac_ui(6.0 * k) * (13591409.0 + (545140134.0 * k)))	\
-			/								\
-			(mpfr::fac_ui(3.0 * k) * mpfr::pow(mpfr::fac_ui(k), 3.0) *	\
-			mpfr::pow(640320.0, 3.0 * k));*/
-
-			mpfr::mpreal a = mpfr::pow(-1.0, k) *				\
-			mpfr::fac_ui(6.0 * k) /						\
-			(mpfr::fac_ui(3.0 * k) * mpfr::pow(mpfr::fac_ui(k), 3.0))	\
-			*								\
-			((13591409.0 + (545140134.0 * k)) / mpfr::pow(640320.0, 3.0 * k));
-
-			return a;
-		}
-		static inline const mpfr::mpreal pi_for(const mpfr::mpreal sum)
-		{
-			return mpfr::pow((mpfr::sqrt(10005.0) / 4270934400.0) * sum, (-1.0));
-		}
-		static inline const mpfr::mpreal exp_mod(const mpfr::mpreal b, mpfr::mpreal n, const mpfr::mpreal k)
+		mpfr::mpreal exp_mod(const mpfr::mpreal b, mpfr::mpreal n, const mpfr::mpreal k)
 		{
 			mpfr::mpreal r = 1.0;
 			mpfr::mpreal t = 0.0;
@@ -92,7 +64,7 @@ namespace picalc
 			}
 			return r;
 		}
-		static inline const mpfr::mpreal sum_for(const mpfr::mpreal n, const mpfr::mpreal j)
+		mpfr::mpreal sum_for(const mpfr::mpreal n, const mpfr::mpreal j)
 		{
 			mpfr::mpreal sum;
 
@@ -108,21 +80,16 @@ namespace picalc
 
 			return sum;
 		}
-		static inline const mpfr::mpreal bbp_for(const mpfr::mpreal n)
+		mpfr::mpreal bbp_for(const mpfr::mpreal n)
 		{
-			mpfr::mpreal a =	(4.0 * sum_for(n, 1)) \
-					-	(2.0 * sum_for(n, 4)) \
-					-	(1.0 * sum_for(n, 5)) \
-					-	(1.0 * sum_for(n, 6));
+			mpfr::mpreal a =	(4.0 * sum_for(n, 1.0)) \
+					-	(2.0 * sum_for(n, 4.0)) \
+					-	(1.0 * sum_for(n, 5.0)) \
+					-	(1.0 * sum_for(n, 6.0));
 			a = mpfr::mod(a, 1.0);
 			return a;
 		}
-		std::mutex m;
-		run_info info;
-		unsigned int threadc;
-		std::vector<std::thread> t;
-
-		static inline unsigned long long hex_at(mpfr::mpreal r, const unsigned int k, const unsigned int len = 8)
+		unsigned long long hex_at(mpfr::mpreal r, const unsigned int k, const unsigned int len = 8)
 		{
 			if (len > 15 && std::numeric_limits<signed long long>::max() == pow(2, 64) / 2)
 			{
@@ -134,14 +101,15 @@ namespace picalc
 			std::string result;
 			for (;;)
 			{
-				r = ldexp(r, 4); // *= 16
+				r *= 16;
+				//r = ldexp(r, 4); // *= 16
 				result.append(to_string<unsigned int>((unsigned long)mpfr::trunc(r).toULong(), std::hex));
 				r -= mpfr::trunc(r);
 				if (r == 0.0)
 					break;
 			}
 
-			std::cout.precision(8);
+			//std::cout.precision(8);
 			//std::cout << "a ### " << std::hex << result << std::endl;
 			//std::cout << "b ### " << result.substr(k, len) << " at index " << k << " for len of " << len << std::endl;
 
@@ -157,6 +125,49 @@ namespace picalc
 			}
 			return ret;
 		}
+		mpfr::mpreal for_k(const unsigned long k)
+		{
+			mpfr::mpreal long_k = (mpfr::mpreal(k) * 545140134.0) + 13591409.0;
+			// -1 ^ k
+			// (6k)!
+			// /
+			// (k!)^3 * (3k)!
+			// *
+			// (13591409 + 545140134k)
+			// /
+			// 640320^3k
+			/*mpfr::mpreal a = mpfr::pow(-1.0, k) *				\
+			(mpfr::fac_ui(6.0 * k) * (13591409.0 + (545140134.0 * k)))	\
+			/								\
+			(mpfr::fac_ui(3.0 * k) * mpfr::pow(mpfr::fac_ui(k), 3.0) *	\
+			mpfr::pow(640320.0, 3.0 * k));*/
+
+			mpfr::mpreal a;
+			mpfr::mpreal::set_default_prec(info.precision);
+			//a.set_prec(1024);
+
+			a = mpfr::pow(-1.0, k) *					\
+			(mpfr::fac_ui(6.0 * k) /					\
+			(mpfr::fac_ui(3.0 * k) * mpfr::pow(mpfr::fac_ui(k), 3.0)))	\
+			*								\
+			(long_k / mpfr::pow(640320.0, 3.0 * k));
+
+			//std::cout << std::dec << " __ precision == " << a.get_prec() << "  Default == " << mpfr::mpreal::get_default_prec() << " __ " << std::endl;
+
+			return a;
+		}
+		mpfr::mpreal pi_for(mpfr::mpreal sum) const
+		{
+			const mpfr::mpreal c = mpfr::sqrt(10005.0) / 4270934400.0;
+			sum *= c;
+			sum = pow(sum, -1.0);
+			return sum;
+		}
+		std::mutex m;
+		run_info info;
+		unsigned int threadc;
+		std::vector<std::thread> t;
+		std::atomic<unsigned long> j;
 	protected:
 	public:
 		void calculate(const unsigned int runs)
@@ -164,26 +175,28 @@ namespace picalc
 			mpfr::mpreal::set_default_prec(info.precision);
 			mpfr::mpreal sum = 0;
 
-			for (unsigned int ph = 0; ph < threadc; ph++)
+			std::cout << std::dec << " __ Default == " << mpfr::mpreal::get_default_prec() << " __ " << std::endl;
+// Log(151931373056000) / Log(10) = 14.181647462725477655...
+
+			for (unsigned int phase = 0; phase < threadc; phase++)
 			{
-				t[ph] = std::thread( [&] (unsigned int phase)
+				t[phase] = std::thread( [&] ()
 					{
-						for (unsigned int k = phase; k < runs; k += threadc)
+						for (; j.load() < runs; j++)
 						{
-							mpfr::mpreal tmp = for_k(k);
+							mpfr::mpreal tmp = for_k(j);
 							std::unique_lock<std::mutex> lock (m);
-							//std::cout << tmp << std::endl;
 							sum += tmp;
 						}
-					}, ph);
+					} );
 			}
 
 			join_all(t);
-			mpfr::mpreal pi = pi_for(sum);
+			const mpfr::mpreal pi = pi_for(sum);
 
 			std::cout << std::hex;
 
-			for (unsigned int k = 0; k < 120; k += 1)
+			/*for (unsigned int k = 0; k < 120; k += 1)
 			{
 				std::cout << hex_at(bbp_for(k), 0, 1);
 			}
@@ -192,33 +205,30 @@ namespace picalc
 			for (unsigned int k = 0; k < 120; k += 1)
 			{
 				std::cout << hex_at(pi, k, 1);
-			}
+			}*/
 
 			std::cout << std::endl << "##############" << std::endl;
 
 			unsigned long correct_digits = 0;
-			for (unsigned int k = 0; k < pi.toString().size(); k++)
+			for (unsigned int k = 0; k < pi.toString().size(); k += 8)
 			{
-				//std::cout << std::dec << "k == " << k << std::endl;
-				//std::cout << std::hex << hex_at(bbp_for(k), 0, 1) << std::endl << std::hex << hex_at(pi, k, 1) << std::endl;
-				if (hex_at(bbp_for(k), 0, 1) == hex_at(pi, k, 1))
-					correct_digits++;
+				if (hex_at(bbp_for(k), 0, 8) == hex_at(pi, k, 8))
+					correct_digits += 8;
 				else
 					break;
 			}
-			std::cout.precision(14);
-		//	std::cout << std::hex << (unsigned long int)(bbp_for(0).toLDouble() * 72057594037927936.0) << std::dec << std::endl;
 			std::cout << std::dec << "Correct digits: " << correct_digits << std::endl;
-			std::cout.precision(1024);
+
 			std::stringstream ss;
 			ss.precision(1024);
 			ss << pi;
+
+			//std::cout.precision(1024);
 			std::cout << ss.str() << std::endl;
+
 			std::cout << "Buffer Length: " << ss.str().size() << std::endl;
-		//	std::cout << std::hex << hex_at(pi, 0) << std::endl;
-		//	printf("%014lx\n", (unsigned long int)(bbp_for(0).toLDouble() * 72057594037927936.0));
 		}
-		chudnovsky(const run_info r) : info(r), threadc(r.threads), t(threadc)
+		chudnovsky(const run_info r) : info(r), threadc(r.threads), t(threadc), j(0)
 		{
 		}
 		~chudnovsky()
