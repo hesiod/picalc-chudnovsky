@@ -8,12 +8,33 @@
 #include <iostream>
 #include <cstdlib>
 #include <csignal>
+#include <cmath>
 #include "pi.h"
 #include "tsio.h"
 #include "util.h"
 #include <tclap/CmdLine.h>
 
 using namespace std;
+
+class VerificationModeString : public TCLAP::Constraint<std::string>
+{
+public:
+	std::string description() const
+	{
+		return "Valid verification modes are: full, normal (recommended), none";
+	}
+	std::string shortID() const
+	{
+		return "verification mode";
+	}
+	bool check(const std::string& value) const
+	{
+		if (value == "full" || value == "normal" || value == "none")
+			return true;
+		else
+			return false;
+	}
+};
 
 int main(int argc, char* argv[])
 {
@@ -23,34 +44,40 @@ int main(int argc, char* argv[])
 
 	picalc::run_info r;
 	unsigned long runc;
+	std::string verification_mode;
+	unsigned long digits;
 
 	try
 	{
-		TCLAP::CmdLine cmd("An arbitrary precision pi calculator using C++ and the GNU multiple precision library (GMP).", ' ', "0.1");
+		TCLAP::CmdLine cmd("An arbitrary precision pi calculator using C++(11) and the multiple-precision floating-point library (MPFR).", '=', "0.1");
 
 		TCLAP::ValueArg<unsigned long> threadc_arg("j", "jobs", "number of threads to use", \
-			false, thread::hardware_concurrency(), "A positive non-zero integral number.", cmd);
+			false, thread::hardware_concurrency(), "number", cmd);
 
-		TCLAP::ValueArg<unsigned long> runc_arg("r", "runs", "number of runs to perform (n of the equation)", \
-			false, 1000, "A positive non-zero integral number.", cmd);
+		TCLAP::ValueArg<unsigned long> digits_arg("d", "digits", "number of digits to calculate", \
+			false, 1000, "number", cmd);
 
-		TCLAP::ValueArg<unsigned long> prec_arg("p", "prec", "precision of GMP float", \
-			false, 10000, "A positive non-zero integral number.", cmd);
+		TCLAP::ValueArg<std::string> verification_arg("v", "verify", "verification mode", \
+			false, "normal", new VerificationModeString(), cmd);
 
 	//	TCLAP::SwitchArg reverseSwitch("r","reverse","Print name backwards", cmd, false);
+
+// Log(151931373056000) / Log(10) = 14.181647462725477655..
 
 		// Parse the argv array.
 		cmd.parse(argc, argv);
 
 		// Get the value parsed by each arg.
 		r.threads = threadc_arg.getValue();
-		r.precision = prec_arg.getValue();
-		runc = runc_arg.getValue();
+		digits = digits_arg.getValue();
+		runc = ceil(digits / 14.181647462725477655 * 1.2);
+		r.precision = mpfr::digits2bits(digits + 200);
+		verification_mode = verification_arg.getValue();
 	}
 	catch (TCLAP::ArgException &e)  // catch any exceptions
 	{
-		std::cerr << "Error while parsing arguments: " << e.error() << " for arg " << e.argId() << std::endl;
-		terminate();
+		std::cerr << "Error while parsing arguments: " << e.error() << " for argument " << e.argId() << std::endl;
+		return EXIT_FAILURE;
 	}
 
 	mpfr::mpreal::set_default_prec(r.precision);
@@ -58,10 +85,9 @@ int main(int argc, char* argv[])
 	//disable_cursor();
 
 	cout << "Using " << r.threads << " thread(s)!" << endl;
-	cout << "Precision is " << r.precision << "." << endl;
-	cout << "Doing " << runc << " runs." << endl;
+	cout << "Doing " << runc << " runs with a precision of " << r.precision << " for " << digits << " digits." << endl;
 
-	picalc::pi p(r, runc);
+	picalc::pi p(r, runc, verification_mode);
 
 	//p.calculate(runc);
 
@@ -69,5 +95,5 @@ int main(int argc, char* argv[])
 
 	//cout << p.digits() << endl;
 
-	return 0;
+	return EXIT_SUCCESS;
 }

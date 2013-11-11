@@ -95,6 +95,9 @@ namespace picalc
 			{
 				throw std::out_of_range("The limit for hex_at is  std::numeric_limits<signed long long>::max()  , usually (2 ^ 64) / 2. Please do not use lengths greater than 15.");
 			}
+			std::cout << "__ 1 __" << std::hex << std::endl;
+
+			//unsigned
 
 			r -= mpfr::trunc(r);
 			mpfr::mpreal tmp = r;
@@ -108,15 +111,25 @@ namespace picalc
 				if (r == 0.0)
 					break;
 			}
+			std::cout << "__ 3 __" << std::hex << std::endl;
 
 			//std::cout.precision(8);
+			//std::cout << "__ 1 __" << std::hex << std::endl;
 			//std::cout << "a ### " << std::hex << result << std::endl;
-			//std::cout << "b ### " << result.substr(k, len) << " at index " << k << " for len of " << len << std::endl;
+			//std::cout << "__ 2 __" << std::hex << std::endl;
+			//std::cout << "b ### " << std::dec << " at index " << k << " for len of " << len << std::endl;
+			//std::cout << "__ 3 __" << std::hex << std::endl;
+			//std::cout << "c ### " << result.substr(k, len) << " at index " << k << " for len of " << len << std::endl;
+			//std::cout << "__ 4 __" << std::hex << std::endl;
 
+			std::cout << "__ 3 __" << std::hex << std::endl;
 			unsigned long long ret;
 			try
 			{
-				ret = std::stoll(result.substr(k, len), nullptr, 16);
+				std::cout << std::dec << "k == " << k << " size == " << result.size() << std::endl;
+				std::string str = result.substr(k, len);
+			std::cout << "__ 4 __" << std::hex << std::endl;
+				ret = std::stoll(str, nullptr, 16);
 			}
 			catch (std::out_of_range oor)
 			{
@@ -170,7 +183,7 @@ namespace picalc
 		std::atomic<unsigned long> j;
 	protected:
 	public:
-		void calculate(const unsigned int runs)
+		void calculate(const unsigned int runs, const std::string verification_mode)
 		{
 			mpfr::mpreal::set_default_prec(info.precision);
 			mpfr::mpreal sum = 0;
@@ -186,6 +199,7 @@ namespace picalc
 						{
 							mpfr::mpreal tmp = for_k(k);
 							std::unique_lock<std::mutex> lock (m);
+							std::cout << tmp << std::endl;
 							sum += tmp;
 						}
 					}, phase );
@@ -209,15 +223,51 @@ namespace picalc
 
 			std::cout << std::endl << "##############" << std::endl;
 
-			unsigned long correct_digits = 0;
-			for (unsigned int k = 0; k < pi.toString().size(); k += 8)
+			if (verification_mode == "full")
 			{
-				if (hex_at(bbp_for(k), 0, 8) == hex_at(pi, k, 8))
-					correct_digits += 8;
-				else
-					break;
+				unsigned long correct_digits = 0;
+				for (unsigned int k = 0; k < pi.toString().size(); k += 8)
+				{
+					if (hex_at(bbp_for(k), 0, 8) == hex_at(pi, k, 8))
+						correct_digits += 8;
+					else
+						break;
+				}
+				std::string tmp = pi.toString().substr(2, correct_digits);
+				correct_digits = 1 + mpfr::log10(mpfr::mpreal(tmp)).toULong();
+				//correct_digits *= 1.6;
+				//correct_digits = ceil(correct_digits);
+				std::cout << std::dec << "Correct (hexadecimal) digits: " << correct_digits << std::endl;
 			}
-			std::cout << std::dec << "Correct digits: " << correct_digits << std::endl;
+			else if (verification_mode == "normal")
+			{
+				unsigned long incorrect_digits = 0;
+				std::string tmp = pi.toString().substr(2);
+				unsigned long sz = 1 + (mpfr::log2(mpfr::mpreal(tmp)).toULong() / 4);
+				std::cout << std::dec << "sz == " << sz << std::endl;
+				// pi.toString().size() - 10
+				for (unsigned long k = sz; k > 0; k--)
+				{
+				std::cout << "Hello! 111 " << std::endl;
+					//std::cout << "k is " << k << std::endl;
+					//std::cout << "len of pi is " << pi.toString().size() << std::endl;
+					(void)hex_at(bbp_for(k), 0, 1);
+				std::cout << "Hello! 222 " << std::endl;
+					(void)hex_at(pi, k, 1);
+				std::cout << "Hello! 333 " << std::endl;
+					/*if (hex_at(bbp_for(k), 0, 1) != hex_at(pi, k, 1))
+						incorrect_digits++;
+					else
+						break;*/
+				}
+				//tmp = pi.toString().substr(2, incorrect_digits);
+				//incorrect_digits = 1 + mpfr::log10(mpfr::mpreal(tmp)).toULong();
+				//incorrect_digits *= 1.6;
+				//incorrect_digits = ceil(incorrect_digits);
+				std::cout << std::dec << "Incorrect digits (counted from the end): " << incorrect_digits << std::endl;
+				std::cout << std::dec << "That are " << incorrect_digits / pi.toString().size() * 100 << "% of all digits." << std::endl;
+			}
+			// Do nothing if verification_mode is "none"
 
 			std::stringstream ss;
 			ss.precision(1024);
@@ -259,10 +309,10 @@ namespace picalc
 			std::stringbuffer str;
 			return outstr.size();
 		}*/
-		pi(const run_info r, unsigned int runs) //: finished(false)
+		pi(const run_info r, unsigned int runs, std::string verification_mode) //: finished(false)
 		{
 			chudnovsky ch(r);
-			ch.calculate(runs);
+			ch.calculate(runs, verification_mode);
 		}
 		~pi()
 		{
