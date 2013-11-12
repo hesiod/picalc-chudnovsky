@@ -36,7 +36,7 @@ namespace picalc
 	class chudnovsky
 	{
 	private:
-		mpfr::mpreal exp_mod(const mpfr::mpreal b, mpfr::mpreal n, const mpfr::mpreal k)
+		static inline mpfr::mpreal exp_mod(const mpfr::mpreal b, mpfr::mpreal n, const mpfr::mpreal k)
 		{
 			mpfr::mpreal r = 1.0;
 			mpfr::mpreal t = 0.0;
@@ -64,7 +64,7 @@ namespace picalc
 			}
 			return r;
 		}
-		mpfr::mpreal sum_for(const mpfr::mpreal n, const mpfr::mpreal j)
+		static inline mpfr::mpreal sum_for(const mpfr::mpreal n, const mpfr::mpreal j)
 		{
 			mpfr::mpreal sum;
 
@@ -80,7 +80,7 @@ namespace picalc
 
 			return sum;
 		}
-		mpfr::mpreal bbp_for(const mpfr::mpreal n)
+		static inline mpfr::mpreal bbp_for(const mpfr::mpreal n)
 		{
 			mpfr::mpreal a =	(4.0 * sum_for(n, 1.0)) \
 					-	(2.0 * sum_for(n, 4.0)) \
@@ -89,7 +89,7 @@ namespace picalc
 			a = mpfr::mod(a, 1.0);
 			return a;
 		}
-		unsigned long long hex_at(mpfr::mpreal r, const unsigned int k, const unsigned int len = 8)
+		static inline unsigned long long hex_at(mpfr::mpreal r, const unsigned int k, const unsigned int len = 8)
 		{
 			if (len > 15 && std::numeric_limits<signed long long>::max() == pow(2, 64) / 2)
 			{
@@ -136,12 +136,12 @@ namespace picalc
 				std::cout << std::endl << "##############" << std::endl;
 				std::cerr << "Fatal error in program logic." << std::endl;
 				std::cerr << "The limit for hex_at is  std::numeric_limits<unsigned long long>::max()  , usually (2 ^ 64) / 2." << std::endl;
-				std::cerr << "debug (If you see this, create a debug report at Github) ### " << result.substr(k, len) << " at index " << k << " for len of " << len << std::endl;
+				std::cerr << "Debug output (If you see this, create a debug report at Github) ### " << result.substr(k, len) << " at index " << k << " for len of " << len << std::endl;
 				throw;
 			}
 			return ret;
 		}
-		mpfr::mpreal for_k(const unsigned long k)
+		inline mpfr::mpreal for_k(const unsigned long k) const
 		{
 			mpfr::mpreal long_k = (mpfr::mpreal(k) * 545140134.0) + 13591409.0;
 			// -1 ^ k
@@ -168,11 +168,9 @@ namespace picalc
 			*								\
 			(long_k / mpfr::pow(640320.0, 3.0 * k));
 
-			//std::cout << std::dec << " __ precision == " << a.get_prec() << "  Default == " << mpfr::mpreal::get_default_prec() << " __ " << std::endl;
-
 			return a;
 		}
-		mpfr::mpreal pi_for(mpfr::mpreal sum) const
+		static inline mpfr::mpreal pi_for(mpfr::mpreal sum)
 		{
 			const mpfr::mpreal c = mpfr::sqrt(10005.0) / 4270934400.0;
 			sum *= c;
