@@ -95,7 +95,7 @@ namespace picalc
 			{
 				throw std::out_of_range("The limit for hex_at is  std::numeric_limits<signed long long>::max()  , usually (2 ^ 64) / 2. Please do not use lengths greater than 15.");
 			}
-			std::cout << "__ 1 __" << std::hex << std::endl;
+			//std::cout << "__ 1 __" << std::hex << std::endl;
 
 			//unsigned
 
@@ -111,7 +111,7 @@ namespace picalc
 				if (r == 0.0)
 					break;
 			}
-			std::cout << "__ 3 __" << std::hex << std::endl;
+			//std::cout << "__ 3 __" << std::hex << std::endl;
 
 			//std::cout.precision(8);
 			//std::cout << "__ 1 __" << std::hex << std::endl;
@@ -122,18 +122,21 @@ namespace picalc
 			//std::cout << "c ### " << result.substr(k, len) << " at index " << k << " for len of " << len << std::endl;
 			//std::cout << "__ 4 __" << std::hex << std::endl;
 
-			std::cout << "__ 3 __" << std::hex << std::endl;
+			//std::cout << "__ 3 __" << std::hex << std::endl;
 			unsigned long long ret;
 			try
 			{
-				std::cout << std::dec << "k == " << k << " size == " << result.size() << std::endl;
+			//	std::cout << std::dec << "k == " << k << " size == " << result.size() << std::endl;
 				std::string str = result.substr(k, len);
-			std::cout << "__ 4 __" << std::hex << std::endl;
+			//std::cout << "__ 4 __" << std::hex << std::endl;
 				ret = std::stoll(str, nullptr, 16);
 			}
 			catch (std::out_of_range oor)
 			{
+				std::cout << std::endl << "##############" << std::endl;
+				std::cerr << "Fatal error in program logic." << std::endl;
 				std::cerr << "The limit for hex_at is  std::numeric_limits<unsigned long long>::max()  , usually (2 ^ 64) / 2." << std::endl;
+				std::cerr << "debug (If you see this, create a debug report at Github) ### " << result.substr(k, len) << " at index " << k << " for len of " << len << std::endl;
 				throw;
 			}
 			return ret;
@@ -149,6 +152,7 @@ namespace picalc
 			// (13591409 + 545140134k)
 			// /
 			// 640320^3k
+
 			/*mpfr::mpreal a = mpfr::pow(-1.0, k) *				\
 			(mpfr::fac_ui(6.0 * k) * (13591409.0 + (545140134.0 * k)))	\
 			/								\
@@ -157,7 +161,6 @@ namespace picalc
 
 			mpfr::mpreal a;
 			mpfr::mpreal::set_default_prec(info.precision);
-			//a.set_prec(1024);
 
 			a = mpfr::pow(-1.0, k) *					\
 			(mpfr::fac_ui(6.0 * k) /					\
@@ -189,23 +192,67 @@ namespace picalc
 			mpfr::mpreal sum = 0;
 
 			std::cout << std::dec << " __ Default == " << mpfr::mpreal::get_default_prec() << " __ " << std::endl;
+
 // Log(151931373056000) / Log(10) = 14.181647462725477655...
+
+			auto start = std::chrono::high_resolution_clock::now();
 
 			for (unsigned int phase = 0; phase < threadc; phase++)
 			{
 				t[phase] = std::thread( [&] (unsigned int ph)
+				{
+					for (unsigned int k = ph; k < runs; k += threadc)
 					{
-						for (unsigned int k = ph; k < runs; k += threadc)
+						mpfr::mpreal tmp = for_k(k);
+
+						if (ph == 0)
 						{
-							mpfr::mpreal tmp = for_k(k);
+							auto middle = std::chrono::high_resolution_clock::now();
+							std::chrono::duration<double> runs_took = middle - start;
+							double rel = 1.0f / ((double)k / (double)runs);
+							std::chrono::seconds remaining_s = std::chrono::duration_cast<std::chrono::seconds>((runs_took * rel) - runs_took);
+							std::chrono::minutes remaining_m = std::chrono::duration_cast<std::chrono::minutes>(remaining_s);
+							std::chrono::hours   remaining_h = std::chrono::duration_cast<std::chrono::hours>  (remaining_s);
+							remaining_s -= remaining_h + remaining_m;
+							remaining_m -= remaining_h;
+							std::chrono::duration<double> elapsed_seconds = middle - start;
+
+							//print_percent(i, runs);
+							//clear_line();
+							std::cout.precision(1);
+							//<< "  Estimated remaining: " << remaining_h.count() << "h " << remaining_m.count() << "m " << remaining_s.count() << "s
+							std::cout << std::fixed << "\rElapsed: " << elapsed_seconds.count() << "s " << " Runs: " << k << " out of " << runs;
+							std::cout.flush();
+
 							std::unique_lock<std::mutex> lock (m);
-							std::cout << tmp << std::endl;
+							auto add_start = std::chrono::high_resolution_clock::now();
+							sum += tmp;
+							auto add_end = std::chrono::high_resolution_clock::now();
+							lock.unlock();
+
+							std::chrono::duration<double> add_elapsed_seconds = add_end - add_start;
+							std::cout.precision(4);
+							std::cout << " Adding: " << add_elapsed_seconds.count() << "s";
+							std::cout.flush();
+						}
+						else
+						{
+							std::unique_lock<std::mutex> lock (m);
 							sum += tmp;
 						}
-					}, phase );
+					}
+				}, phase );
 			}
 
 			join_all(t);
+
+			std::cout << std::endl;
+
+			auto end = std::chrono::high_resolution_clock::now();
+			std::chrono::duration<double> elapsed_seconds = end - start;
+			std::cout.precision(8);
+			std::cout << "Calculation took " << std::fixed << elapsed_seconds.count() << "s" << std::endl;
+
 			const mpfr::mpreal pi = pi_for(sum);
 
 			std::cout << std::hex;
@@ -226,17 +273,16 @@ namespace picalc
 			if (verification_mode == "full")
 			{
 				unsigned long correct_digits = 0;
-				for (unsigned int k = 0; k < pi.toString().size(); k += 8)
+				std::string tmp = pi.toString().substr(2);
+				unsigned long sz = 1 + (mpfr::log2(mpfr::mpreal(tmp)).toULong() / 4);
+				for (unsigned int k = 0; k < sz; k += 8)
 				{
 					if (hex_at(bbp_for(k), 0, 8) == hex_at(pi, k, 8))
 						correct_digits += 8;
 					else
 						break;
 				}
-				std::string tmp = pi.toString().substr(2, correct_digits);
-				correct_digits = 1 + mpfr::log10(mpfr::mpreal(tmp)).toULong();
-				//correct_digits *= 1.6;
-				//correct_digits = ceil(correct_digits);
+				std::cout.precision(8);
 				std::cout << std::dec << "Correct (hexadecimal) digits: " << correct_digits << std::endl;
 			}
 			else if (verification_mode == "normal")
@@ -244,26 +290,21 @@ namespace picalc
 				unsigned long incorrect_digits = 0;
 				std::string tmp = pi.toString().substr(2);
 				unsigned long sz = 1 + (mpfr::log2(mpfr::mpreal(tmp)).toULong() / 4);
-				std::cout << std::dec << "sz == " << sz << std::endl;
-				// pi.toString().size() - 10
 				for (unsigned long k = sz; k > 0; k--)
 				{
-				std::cout << "Hello! 111 " << std::endl;
-					//std::cout << "k is " << k << std::endl;
-					//std::cout << "len of pi is " << pi.toString().size() << std::endl;
-					(void)hex_at(bbp_for(k), 0, 1);
-				std::cout << "Hello! 222 " << std::endl;
-					(void)hex_at(pi, k, 1);
-				std::cout << "Hello! 333 " << std::endl;
-					/*if (hex_at(bbp_for(k), 0, 1) != hex_at(pi, k, 1))
+					std::cout << "hello" << std::endl;
+					if (hex_at(bbp_for(k), 0, 1) != hex_at(pi, k, 1))
 						incorrect_digits++;
 					else
-						break;*/
+						if (hex_at(bbp_for(k), 0, 1) != hex_at(pi, k, 1))
+							incorrect_digits += 2;
+						else
+							if (hex_at(bbp_for(k), 0, 1) != hex_at(pi, k, 1))
+								incorrect_digits += 3;
+							else
+								break;
 				}
-				//tmp = pi.toString().substr(2, incorrect_digits);
-				//incorrect_digits = 1 + mpfr::log10(mpfr::mpreal(tmp)).toULong();
-				//incorrect_digits *= 1.6;
-				//incorrect_digits = ceil(incorrect_digits);
+				std::cout.precision(8);
 				std::cout << std::dec << "Incorrect digits (counted from the end): " << incorrect_digits << std::endl;
 				std::cout << std::dec << "That are " << incorrect_digits / pi.toString().size() * 100 << "% of all digits." << std::endl;
 			}
@@ -276,7 +317,7 @@ namespace picalc
 			//std::cout.precision(1024);
 			std::cout << ss.str() << std::endl;
 
-			std::cout << "Buffer Length: " << ss.str().size() << std::endl;
+			std::cout << "Buffer Length: " << pi.toString().size() << std::endl;
 		}
 		chudnovsky(const run_info r) : info(r), threadc(r.threads), t(threadc), j(0)
 		{
