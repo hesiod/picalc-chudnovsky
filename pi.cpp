@@ -10,8 +10,6 @@
 #include <vector>
 #include <thread>
 #include <future>
-#include <gmp.h>
-#include <gmpxx.h>
 #include "pi.h"
 #include "tsio.h"
 #include "util.h"

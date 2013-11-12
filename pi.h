@@ -36,57 +36,71 @@ namespace picalc
 	class chudnovsky
 	{
 	private:
-		static inline mpfr::mpreal exp_mod(const mpfr::mpreal b, mpfr::mpreal n, const mpfr::mpreal k)
+		/*std::map<unsigned long, mpfr::mpreal> fac;
+		void fast_factorial(const unsigned long k)
 		{
-			mpfr::mpreal r = 1.0;
-			mpfr::mpreal t = 0.0;
+			if (k > 0)
+			{
+				fac.erase(fac.find(k - 1));
+				fac.insert(std::pair<unsigned long, mpfr::mpreal>(k, mpmpfr::fac_ui(6 * k));
+
+			}
+			else
+			{
+				fac.insert(std::pair<unsigned long, mpfr::mpreal>(0, mpmpfr::fac_ui(k));
+			}
+		}*/
+		static inline unsigned long exp_mod(const unsigned long b, unsigned long n, const unsigned long k)
+		{
+			unsigned long r = 1;
+			unsigned long t = 0;
 			unsigned int i;
 			for (i = 0; t <= n; i++)
 			{
-				t = mpfr::pow(2.0, i);
+				t = pow(2, i);
 			}
 			i--;
-			t = mpfr::pow(2.0, i);
+			t = pow(2, i);
 			while (1)
 			{
 				if (n >= t)
 				{
-					r = mpfr::mod(b * r, k);
+					r = fmod(b * r, k);
 					n -= t;
 				}
-				t /= 2.0;
-				if (t >= 1.0)
+				t /= 2;
+				if (t >= 1)
 				{
-					r = mpfr::mod(mpfr::pow(r, 2.0), k);
+					r = fmod(pow(r, 2), k);
 				}
 				else
 					break;
 			}
 			return r;
 		}
-		static inline mpfr::mpreal sum_for(const mpfr::mpreal n, const mpfr::mpreal j)
+		static inline unsigned long sum_for(const unsigned long n, const unsigned long j)
 		{
-			mpfr::mpreal sum;
+			unsigned long sum = 0;
 
-			for (mpfr::mpreal k = 0; k <= n; k++)
+			for (unsigned long k = 0; k <= n; k++)
 			{
-				//sum += mpfr::mod(mpfr::pow(16.0, n - k), (8.0 * k) + j) / ((8.0 * k) + j);
-				sum += exp_mod(16.0, n - k, (8.0 * k) + j) / ((8.0 * k) + j);
+				//sum += mpfr::mod(mpfr::pow(16, n - k), (8 * k) + j) / ((8 * k) + j);
+				sum += exp_mod(16, n - k, (8 * k) + j) / ((8 * k) + j);
 			}
-			for (mpfr::mpreal k = n + 1.0; k <= n + 32.0; k++)
+			for (unsigned long k = n + 1; k <= n + 32; k++)
 			{
-				sum += mpfr::pow(16.0, n - k) / (8.0 * k + j);
+				sum += pow(16.0, n - k) / (8 * k + j);
 			}
 
 			return sum;
 		}
-		static inline mpfr::mpreal bbp_for(const mpfr::mpreal n)
+		static inline unsigned long bbp_for(const unsigned long n)
 		{
-			mpfr::mpreal a =	(4.0 * sum_for(n, 1.0)) \
-					-	(2.0 * sum_for(n, 4.0)) \
-					-	(1.0 * sum_for(n, 5.0)) \
-					-	(1.0 * sum_for(n, 6.0));
-			a = mpfr::mod(a, 1.0);
+			unsigned long a =	(4 * sum_for(n, 1)) \
+					-	(2 * sum_for(n, 4)) \
+					-	(1 * sum_for(n, 5)) \
+					-	(1 * sum_for(n, 6));
+			a = a % 1;
 			return a;
 		}
 		static inline unsigned long long hex_at(mpfr::mpreal r, const unsigned int k, const unsigned int len = 8)

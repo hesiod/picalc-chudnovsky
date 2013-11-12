@@ -7,8 +7,6 @@
 #include <iomanip>
 #include <vector>
 #include <thread>
-#include <gmp.h>
-#include <gmpxx.h>
 #include "tsio.h"
 #include "util.h"
 
