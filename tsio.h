@@ -58,7 +58,7 @@ public:
 		buf.str("");
 		return O;
 	}*/
-	int lprintf(const char* format, ...) noexcept
+	/*int lprintf(const char* format, ...) noexcept
 	{
 		int ret;
 		va_list l;
@@ -67,7 +67,7 @@ public:
 		ret = vprintf(format, l);
 		va_end(l);
 		return ret;
-	}
+	}*/
 	std::mutex& mutex()
 	{
 		return printlock;
