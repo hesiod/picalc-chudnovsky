@@ -15,6 +15,7 @@
 #include <cstdarg>
 #include <cmath>
 #include <stdexcept>
+#include <map>
 #include "mpreal.h"
 #include "util.h"
 #include "tsio.h"
@@ -36,20 +37,43 @@ namespace picalc
 	class chudnovsky
 	{
 	private:
-		/*std::map<unsigned long, mpfr::mpreal> fac;
-		void fast_factorial(const unsigned long k)
+		std::map<unsigned long, mpfr::mpreal> fac;
+		std::mutex fac_lock;
+		static inline mpfr::mpreal fact(unsigned long prev, const unsigned long k, mpfr::mpreal val)
 		{
-			if (k > 0)
+			for (++prev; prev <= k; ++prev)
 			{
-				fac.erase(fac.find(k - 1));
-				fac.insert(std::pair<unsigned long, mpfr::mpreal>(k, mpmpfr::fac_ui(6 * k));
+				val *= prev;
+			}
+			return val;
+		}
+		inline void fast_factorial(const unsigned long k)
+		{
+			if (fac.find(k) == fac.end())
+			{
+				mpfr::mpreal tmp = fact(*(fac.lower_bound(k) - 1), k, fac.at(fac.upper_bound(k) - 1));
 
+				std::unique_lock<std::mutex> lock (fac_lock);
+			std::cout << std::endl << "Adding for " << k << std::endl;
+				fac.insert(std::pair<unsigned long, mpfr::mpreal>(k, tmp));
 			}
-			else
+			if (fac.find(3 * k) == fac.end())
 			{
-				fac.insert(std::pair<unsigned long, mpfr::mpreal>(0, mpmpfr::fac_ui(k));
+				mpfr::mpreal tmp = mpfr::fac_ui(3 * k);
+
+				std::unique_lock<std::mutex> lock (fac_lock);
+			std::cout << std::endl << "Adding for " << 3 * k << std::endl;
+				fac.insert(std::pair<unsigned long, mpfr::mpreal>(3 * k, tmp));
 			}
-		}*/
+			if (fac.find(6 * k) == fac.end())
+			{
+				mpfr::mpreal tmp = mpfr::fac_ui(6 * k);
+
+				std::unique_lock<std::mutex> lock (fac_lock);
+			std::cout << std::endl << "Adding for " << 6 * k << std::endl;
+				fac.insert(std::pair<unsigned long, mpfr::mpreal>(6 * k, tmp));
+			}
+		}
 		static inline unsigned long exp_mod(const unsigned long b, unsigned long n, const unsigned long k)
 		{
 			unsigned long r = 1;
@@ -145,17 +169,17 @@ namespace picalc
 			//std::cout << "__ 4 __" << std::hex << std::endl;
 				ret = std::stoll(str, nullptr, 16);
 			}
-			catch (std::out_of_range oor)
+			catch (...) // (std::out_of_range& oor)
 			{
-				std::cout << std::endl << "##############" << std::endl;
+				std::cerr << std::endl << "##############" << std::endl;
 				std::cerr << "Fatal error in program logic." << std::endl;
 				std::cerr << "The limit for hex_at is  std::numeric_limits<unsigned long long>::max()  , usually (2 ^ 64) / 2." << std::endl;
-				std::cerr << "Debug output (If you see this, create a debug report at Github) ### " << result.substr(k, len) << " at index " << k << " for len of " << len << std::endl;
+				std::cerr << "Debug output (If you see this, create a debug report at Github) ### <" << result.substr(k, len) << "> at index <" << k << "> for len of <" << len << "> while result size is <" << result.size() << ">" << std::endl;
 				throw;
 			}
 			return ret;
 		}
-		inline mpfr::mpreal for_k(const unsigned long k) const
+		inline mpfr::mpreal for_k(const unsigned long k)
 		{
 			mpfr::mpreal long_k = (mpfr::mpreal(k) * 545140134.0) + 13591409.0;
 			// -1 ^ k
@@ -176,13 +200,24 @@ namespace picalc
 			mpfr::mpreal a;
 			mpfr::mpreal::set_default_prec(info.precision);
 
+			fast_factorial(k);
+			try
+			{
 			a = mpfr::pow(-1.0, k) *					\
-			(mpfr::fac_ui(6.0 * k) /					\
-			(mpfr::fac_ui(3.0 * k) * mpfr::pow(mpfr::fac_ui(k), 3.0)))	\
+			(fac.at(6 * k)	/						\
+			(fac.at(3 * k) * mpfr::pow(fac.at(k), 3.0)))			\
 			*								\
 			(long_k / mpfr::pow(640320.0, 3.0 * k));
+			}
+			catch (std::out_of_range& oor)
+			{
+				std::cerr << std::endl << "##############" << std::endl;
+				std::cerr << "Fatal error in program logic." << std::endl;
+				std::cerr << "Debug output (If you see this, create a debug report at Github) ### index is <" << k << "> size is <" << fac.size() << ">" << std::endl;	
+				throw;
+			}
 
-			return a;
+			return std::move(a);
 		}
 		static inline mpfr::mpreal pi_for(mpfr::mpreal sum)
 		{
@@ -202,6 +237,8 @@ namespace picalc
 		{
 			mpfr::mpreal::set_default_prec(info.precision);
 			mpfr::mpreal sum = 0;
+			
+			fac.insert(std::pair<unsigned long, mpfr::mpreal>(0, 1));
 
 			std::cout << std::dec << " __ Default == " << mpfr::mpreal::get_default_prec() << " __ " << std::endl;
 
@@ -253,6 +290,8 @@ namespace picalc
 							sum += tmp;
 						}
 					}
+
+					mpfr_free_cache();
 				}, phase );
 			}
 
@@ -287,7 +326,7 @@ namespace picalc
 				unsigned long correct_digits = 0;
 				std::string tmp = pi.toString().substr(2);
 				unsigned long sz = 1 + (mpfr::log2(mpfr::mpreal(tmp)).toULong() / 4);
-				for (unsigned int k = 0; k < sz; k += 8)
+				for (unsigned int k = 0; k < sz - 1; k += 8)
 				{
 					if (hex_at(bbp_for(k), 0, 8) == hex_at(pi, k, 8))
 						correct_digits += 8;
@@ -302,7 +341,7 @@ namespace picalc
 				unsigned long incorrect_digits = 0;
 				std::string tmp = pi.toString().substr(2);
 				unsigned long sz = 1 + (mpfr::log2(mpfr::mpreal(tmp)).toULong() / 4);
-				for (unsigned long k = sz; k > 0; k--)
+				for (unsigned long k = sz - 2; k > 0; k--)
 				{
 					std::cout << "hello" << std::endl;
 					if (hex_at(bbp_for(k), 0, 1) != hex_at(pi, k, 1))
@@ -330,6 +369,8 @@ namespace picalc
 			std::cout << ss.str() << std::endl;
 
 			std::cout << "Buffer Length: " << pi.toString().size() << std::endl;
+
+			mpfr_free_cache();
 		}
 		chudnovsky(const run_info r) : info(r), threadc(r.threads), t(threadc), j(0)
 		{
@@ -401,6 +442,6 @@ namespace picalc
 			//finished = true;
 		
 	};
-};
+}
 
 #endif
