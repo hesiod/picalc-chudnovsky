@@ -20,3 +20,6 @@ pi
 *.la
 *.a
 
+# Utility Files
+gmon.out
+
