@@ -44,22 +44,35 @@ namespace picalc
 		{
 			if (fac.find(k) == fac.end())
 			{
-				/*std::map<unsigned long, mpfr::mpreal>::iterator it;
-				while (fac.end() >= it && *fac.end() >= k)
-					it--;
-
-				mpfr::mpreal tmp = 0;
-				for (unsigned long prev = *it + 1; prev <= k; prev++)
-				{
-					tmp *= prev;
-				}*/
-
+				mpfr::mpreal tmp = mpfr::fac_ui(k);
+				std::unique_lock<std::mutex> lock (fac_lock);
+				fac.insert(std::pair<unsigned long, mpfr::mpreal>(k, tmp));
+			}
+			if (fac.find(3 * k) == fac.end())
+			{
+				mpfr::mpreal tmp = mpfr::fac_ui(3 * k);
+				std::unique_lock<std::mutex> lock (fac_lock);
+				fac.insert(std::pair<unsigned long, mpfr::mpreal>(3 * k, tmp));
+			}
+			if (fac.find(6 * k) == fac.end())
+			{
+				mpfr::mpreal tmp = mpfr::fac_ui(6 * k);
+				std::unique_lock<std::mutex> lock (fac_lock);
+				fac.insert(std::pair<unsigned long, mpfr::mpreal>(6 * k, tmp));
+			}
+		}
+		/*inline void afast_factorial(const unsigned long k)
+		{
+			if (fac.find(k) == fac.end())
+			{
 				std::unique_lock<std::mutex> lock (fac_lock);
 std::cout << std::endl << "Adding for " << k << std::endl;
 
-				mpfr::mpreal tmp = fac.at(fac.end()->first);
+				mpfr::mpreal tmp = fac.at(fac.end()->first - 1);
+std::cout << std::endl << "Starting at " << tmp << " at key " << fac.end()->first << std::endl;
 				for (unsigned long p = fac.end()->first + 1; p <= k; p++)
 				{
+std::cout << std::endl << "Looping at " << p << std::endl;
 					tmp *= tmp;
 					fac.insert(std::pair<unsigned long, mpfr::mpreal>(p, tmp));
 				}
@@ -71,8 +84,9 @@ std::cout << std::endl << "Adding for " << k << std::endl;
 std::cout << std::endl << "Adding for " << 3 * k << std::endl;
 
 				mpfr::mpreal tmp = fac.at(fac.end()->first);
-				for (unsigned long p = fac.end()->first + 1; p <= k; p++)
+				for (unsigned long p = fac.end()->first + 1; p <= 3 * k; p++)
 				{
+std::cout << std::endl << "Looping at " << p << std::endl;
 					tmp *= tmp;
 					fac.insert(std::pair<unsigned long, mpfr::mpreal>(p, tmp));
 				}
@@ -86,12 +100,13 @@ std::cout << std::endl << "Adding for " << 6 * k << std::endl;
 				mpfr::mpreal tmp = fac.at(fac.end()->first);
 				for (unsigned long p = fac.end()->first + 1; p <= 6 * k; p++)
 				{
+std::cout << std::endl << "Looping at " << p << std::endl;
 					tmp *= tmp;
 					fac.insert(std::pair<unsigned long, mpfr::mpreal>(p, tmp));
 				}
 				fac.insert(std::pair<unsigned long, mpfr::mpreal>(6 * k, tmp));
 			}
-		}
+		}*/
 		static inline unsigned long exp_mod(const unsigned long b, unsigned long n, const unsigned long k)
 		{
 			unsigned long r = 1;
@@ -255,8 +270,11 @@ std::cout << std::endl << "Adding for " << 6 * k << std::endl;
 		{
 			mpfr::mpreal::set_default_prec(info.precision);
 			mpfr::mpreal sum = 0;
+
+			std::cout << std::endl << "##############" << std::endl;
 			
 			fac.insert(std::pair<unsigned long, mpfr::mpreal>(0, 1));
+			//fac.push_back(mpfr::mpreal(1));
 
 			std::cout << std::dec << " __ Default == " << mpfr::mpreal::get_default_prec() << " __ " << std::endl;
 
