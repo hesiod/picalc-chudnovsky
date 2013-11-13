@@ -7,6 +7,7 @@
 #ifndef PI_H
 #define PI_H
 
+#include <algorithm>
 #include <atomic>
 #include <iostream>
 #include <sstream>
@@ -39,38 +40,55 @@ namespace picalc
 	private:
 		std::map<unsigned long, mpfr::mpreal> fac;
 		std::mutex fac_lock;
-		static inline mpfr::mpreal fact(unsigned long prev, const unsigned long k, mpfr::mpreal val)
-		{
-			for (++prev; prev <= k; ++prev)
-			{
-				val *= prev;
-			}
-			return val;
-		}
 		inline void fast_factorial(const unsigned long k)
 		{
 			if (fac.find(k) == fac.end())
 			{
-				mpfr::mpreal tmp = fact(*(fac.lower_bound(k) - 1), k, fac.at(fac.upper_bound(k) - 1));
+				/*std::map<unsigned long, mpfr::mpreal>::iterator it;
+				while (fac.end() >= it && *fac.end() >= k)
+					it--;
+
+				mpfr::mpreal tmp = 0;
+				for (unsigned long prev = *it + 1; prev <= k; prev++)
+				{
+					tmp *= prev;
+				}*/
 
 				std::unique_lock<std::mutex> lock (fac_lock);
-			std::cout << std::endl << "Adding for " << k << std::endl;
+std::cout << std::endl << "Adding for " << k << std::endl;
+
+				mpfr::mpreal tmp = fac.at(fac.end()->first);
+				for (unsigned long p = fac.end()->first + 1; p <= k; p++)
+				{
+					tmp *= tmp;
+					fac.insert(std::pair<unsigned long, mpfr::mpreal>(p, tmp));
+				}
 				fac.insert(std::pair<unsigned long, mpfr::mpreal>(k, tmp));
 			}
 			if (fac.find(3 * k) == fac.end())
 			{
-				mpfr::mpreal tmp = mpfr::fac_ui(3 * k);
-
 				std::unique_lock<std::mutex> lock (fac_lock);
-			std::cout << std::endl << "Adding for " << 3 * k << std::endl;
+std::cout << std::endl << "Adding for " << 3 * k << std::endl;
+
+				mpfr::mpreal tmp = fac.at(fac.end()->first);
+				for (unsigned long p = fac.end()->first + 1; p <= k; p++)
+				{
+					tmp *= tmp;
+					fac.insert(std::pair<unsigned long, mpfr::mpreal>(p, tmp));
+				}
 				fac.insert(std::pair<unsigned long, mpfr::mpreal>(3 * k, tmp));
 			}
 			if (fac.find(6 * k) == fac.end())
 			{
-				mpfr::mpreal tmp = mpfr::fac_ui(6 * k);
-
 				std::unique_lock<std::mutex> lock (fac_lock);
-			std::cout << std::endl << "Adding for " << 6 * k << std::endl;
+std::cout << std::endl << "Adding for " << 6 * k << std::endl;
+
+				mpfr::mpreal tmp = fac.at(fac.end()->first);
+				for (unsigned long p = fac.end()->first + 1; p <= 6 * k; p++)
+				{
+					tmp *= tmp;
+					fac.insert(std::pair<unsigned long, mpfr::mpreal>(p, tmp));
+				}
 				fac.insert(std::pair<unsigned long, mpfr::mpreal>(6 * k, tmp));
 			}
 		}
