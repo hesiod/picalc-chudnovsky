@@ -33,14 +33,23 @@ namespace picalc
 		run_info(unsigned int p, unsigned int t) \
 			: precision(p), threads(t)
 		{ }
-	};	
+	};
 
-	class chudnovsky
+	class cache
 	{
 	private:
+		size_t k;
 		std::map<unsigned long, mpfr::mpreal> fac;
 		std::mutex fac_lock;
-		inline void fast_factorial(const unsigned long k)
+		run_info info;
+	public:
+		/*friend std::ostream& operator<<(std::ostream& out, const cache& p)
+		{
+		}
+		friend std::istream& operator>>(std::istream& out, cache& p)
+		{
+		}*/
+		void fast_factorial(const unsigned long k) noexcept
 		{
 			if (fac.find(k) == fac.end())
 			{
@@ -61,7 +70,86 @@ namespace picalc
 				fac.insert(std::pair<unsigned long, mpfr::mpreal>(6 * k, tmp));
 			}
 		}
-		static inline unsigned long exp_mod(const unsigned long b, unsigned long n, const unsigned long k)
+		void precalculate(size_t num)
+		{
+			num += k;
+			std::vector<std::thread> t (info.threads);
+
+			auto start = std::chrono::high_resolution_clock::now();
+
+			for (unsigned long phase = 0; phase < info.threads; phase++)
+			{
+				t[phase] = std::thread( [&] (const unsigned long ph)
+				{
+					if (ph == 0)
+					{
+						for (unsigned long j = ph; j <= num; j += info.threads)
+						{
+							fast_factorial(j);
+
+							auto middle = std::chrono::high_resolution_clock::now();
+							std::chrono::duration<double> runs_took = middle - start;
+							double rel = 1.0f / ((double)j / (double)num);
+							std::chrono::seconds remaining_s = std::chrono::duration_cast<std::chrono::seconds>((runs_took * rel) - runs_took);
+							std::chrono::minutes remaining_m = std::chrono::duration_cast<std::chrono::minutes>(remaining_s);
+							std::chrono::hours   remaining_h = std::chrono::duration_cast<std::chrono::hours>  (remaining_s);
+							remaining_s -= remaining_h + remaining_m;
+							remaining_m -= remaining_h;
+							std::chrono::duration<double> elapsed_seconds = middle - start;
+
+							clear_line();
+							print_percent(j, num);
+							std::cout.precision(1);
+							std::cout << std::fixed << "Elapsed: " << elapsed_seconds.count() << "s " << " Runs: " << j << " out of " << num;
+							std::cout.flush();
+						}
+						print_percent(1, 1);
+					}
+					else
+					{
+						for (unsigned int j = ph; j <= num; j += info.threads)
+						{
+							fast_factorial(j);
+						}
+					}
+
+					mpfr_free_cache();
+				}, phase );
+			}
+
+			join_all(t);
+
+			std::cout << std::endl;
+
+			auto end = std::chrono::high_resolution_clock::now();
+			std::chrono::duration<double> elapsed_seconds = end - start;
+			std::cout.precision(8);
+			std::cout << "Calculation took " << std::fixed << elapsed_seconds.count() << "s" << std::endl;
+
+			k = num;
+		}
+		cache(run_info r) : k(0), info(r)
+		{
+			fac.insert(std::pair<unsigned long, mpfr::mpreal>(0, 1));
+		}
+		~cache()
+		{
+			mpfr_free_cache();
+		}
+		inline const mpfr::mpreal lookup(const unsigned long k) const noexcept
+		{
+			return fac.at(k);
+		}
+	};
+
+	class chudnovsky
+	{
+	private:
+		std::mutex m;
+		run_info info;
+		std::atomic<unsigned long> j;
+		cache c;
+		static inline unsigned long exp_mod(const unsigned long b, unsigned long n, const unsigned long k) noexcept
 		{
 			unsigned long r = 1;
 			unsigned long t = 0;
@@ -89,7 +177,7 @@ namespace picalc
 			}
 			return r;
 		}
-		static inline unsigned long sum_for(const unsigned long n, const unsigned long j)
+		static inline unsigned long sum_for(const unsigned long n, const unsigned long j) noexcept
 		{
 			unsigned long sum = 0;
 
@@ -105,7 +193,7 @@ namespace picalc
 
 			return sum;
 		}
-		static inline unsigned long bbp_for(const unsigned long n)
+		static inline unsigned long bbp_for(const unsigned long n) noexcept
 		{
 			unsigned long a =	(4 * sum_for(n, 1)) \
 					-	(2 * sum_for(n, 4)) \
@@ -168,7 +256,6 @@ namespace picalc
 		}
 		inline mpfr::mpreal for_k(const unsigned long k)
 		{
-			mpfr::mpreal long_k = (mpfr::mpreal(k) * 545140134.0) + 13591409.0;
 			// -1 ^ k
 			// (6k)!
 			// /
@@ -187,37 +274,32 @@ namespace picalc
 			mpfr::mpreal a;
 			mpfr::mpreal::set_default_prec(info.precision);
 
-			fast_factorial(k);
+			c.fast_factorial(k);
 			try
 			{
-			a = mpfr::pow(-1.0, k) *					\
-			(fac.at(6 * k)	/						\
-			(fac.at(3 * k) * mpfr::pow(fac.at(k), 3.0)))			\
-			*								\
-			(long_k / mpfr::pow(640320.0, 3.0 * k));
+				a = mpfr::pow(-1.0, k) *					\
+				(c.lookup(6 * k)	/						\
+				(c.lookup(3 * k) * mpfr::pow(c.lookup(k), 3.0)))			\
+				*								\
+				(((k * 545140134.0) + 13591409.0) / mpfr::pow(640320.0, 3.0 * k));
 			}
 			catch (std::out_of_range& oor)
 			{
 				std::cerr << std::endl << "##############" << std::endl;
 				std::cerr << "Fatal error in program logic." << std::endl;
-				std::cerr << "Debug output (If you see this, create a debug report at Github) ### index is <" << k << "> size is <" << fac.size() << ">" << std::endl;	
+				std::cerr << "Debug output (If you see this, create a debug report at Github) ### index is <" << k << ">" << std::endl;	
 				throw;
 			}
 
 			return std::move(a);
 		}
-		static inline mpfr::mpreal pi_for(mpfr::mpreal sum)
+		static inline mpfr::mpreal pi_for(mpfr::mpreal sum) noexcept
 		{
 			const mpfr::mpreal c = mpfr::sqrt(10005.0) / 4270934400.0;
 			sum *= c;
 			sum = pow(sum, -1.0);
 			return sum;
 		}
-		std::mutex m;
-		run_info info;
-		unsigned int threadc;
-		std::vector<std::thread> t;
-		std::atomic<unsigned long> j;
 	protected:
 	public:
 		void calculate(const unsigned int runs, const std::string verification_mode)
@@ -225,26 +307,29 @@ namespace picalc
 			mpfr::mpreal::set_default_prec(info.precision);
 			mpfr::mpreal sum = 0;
 
-			std::cout << std::endl << "##############" << std::endl;
-			
-			fac.insert(std::pair<unsigned long, mpfr::mpreal>(0, 1));
-
 			std::cout << std::dec << " __ Default == " << mpfr::mpreal::get_default_prec() << " __ " << std::endl;
 
 // Log(151931373056000) / Log(10) = 14.181647462725477655...
 
+			std::cout << std::endl << "##############" << std::endl << "Precalculating..." << std::endl;
+
+			c.precalculate(runs);
+
+			std::cout << "##############" << std::endl;
+
 			auto start = std::chrono::high_resolution_clock::now();
 
-			for (unsigned int phase = 0; phase < threadc; phase++)
+			std::vector<std::thread> t (info.threads);
+			for (unsigned int phase = 0; phase < info.threads; phase++)
 			{
 				t[phase] = std::thread( [&] (unsigned int ph)
 				{
-					for (unsigned int k = ph; k < runs; k += threadc)
+					if (ph == 0)
 					{
-						mpfr::mpreal tmp = for_k(k);
-
-						if (ph == 0)
+						for (unsigned int k = ph; k <= runs; k += info.threads)
 						{
+							mpfr::mpreal tmp = for_k(k);
+
 							auto middle = std::chrono::high_resolution_clock::now();
 							std::chrono::duration<double> runs_took = middle - start;
 							double rel = 1.0f / ((double)k / (double)runs);
@@ -255,11 +340,11 @@ namespace picalc
 							remaining_m -= remaining_h;
 							std::chrono::duration<double> elapsed_seconds = middle - start;
 
-							//print_percent(i, runs);
-							//clear_line();
+							clear_line();
+							print_percent(k, runs);
 							std::cout.precision(1);
 							//<< "  Estimated remaining: " << remaining_h.count() << "h " << remaining_m.count() << "m " << remaining_s.count() << "s
-							std::cout << std::fixed << "\rElapsed: " << elapsed_seconds.count() << "s " << " Runs: " << k << " out of " << runs;
+							std::cout << std::fixed << "Elapsed: " << elapsed_seconds.count() << "s " << " Runs: " << k << " out of " << runs;
 							std::cout.flush();
 
 							std::unique_lock<std::mutex> lock (m);
@@ -269,12 +354,17 @@ namespace picalc
 							lock.unlock();
 
 							std::chrono::duration<double> add_elapsed_seconds = add_end - add_start;
-							std::cout.precision(4);
-							std::cout << " Adding: " << add_elapsed_seconds.count() << "s";
+							std::cout.precision(10);
+							std::cout << " Adding: " << add_elapsed_seconds.count() << "s\r";
 							std::cout.flush();
 						}
-						else
+						print_percent(1, 1);
+					}
+					else
+					{
+						for (unsigned int k = ph; k <= runs; k += info.threads)
 						{
+							mpfr::mpreal tmp = for_k(k);
 							std::unique_lock<std::mutex> lock (m);
 							sum += tmp;
 						}
@@ -308,7 +398,7 @@ namespace picalc
 				std::cout << hex_at(pi, k, 1);
 			}*/
 
-			std::cout << std::endl << "##############" << std::endl;
+			std::cout << "##############" << std::endl;
 
 			if (verification_mode == "full")
 			{
@@ -344,9 +434,9 @@ namespace picalc
 							else
 								break;
 				}
-				std::cout.precision(8);
 				std::cout << std::dec << "Incorrect digits (counted from the end): " << incorrect_digits << std::endl;
-				std::cout << std::dec << "That are " << incorrect_digits / pi.toString().size() * 100 << "% of all digits." << std::endl;
+				std::cout.precision(8);
+				std::cout << std::dec << std::fixed << "That are " << incorrect_digits / pi.toString().size() * 100.0 << "% of all digits." << std::endl;
 			}
 			// Do nothing if verification_mode is "none"
 
@@ -361,7 +451,7 @@ namespace picalc
 
 			mpfr_free_cache();
 		}
-		chudnovsky(const run_info r) : info(r), threadc(r.threads), t(threadc), j(0)
+		chudnovsky(const run_info r) : info(r), j(0), c(info)
 		{
 		}
 		~chudnovsky()

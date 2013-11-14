@@ -39,8 +39,8 @@ public:
 int main(int argc, char* argv[])
 {
 	atexit([] () { enable_cursor(); cout << endl; });
-	//signal(SIGINT, static_cast<__sighandler_t>( [] (int) { enable_cursor(); cout << endl; exit(1); } ));
-	//signal(SIGSEGV, static_cast<__sighandler_t>( [] (int) { enable_cursor(); cout << endl << "Recieved SIGSEGV" << endl; exit(1); } ));
+	signal(SIGINT,  static_cast<__sighandler_t>( [&] (int) { enable_cursor(); cout << endl; exit(1); } ));
+	signal(SIGSEGV, static_cast<__sighandler_t>( [&] (int) { enable_cursor(); cout << endl << "Recieved SIGSEGV" << endl; exit(1); } ));
 
 	picalc::run_info r;
 	unsigned long runc;
@@ -82,7 +82,7 @@ int main(int argc, char* argv[])
 
 	mpfr::mpreal::set_default_prec(r.precision);
 
-	//disable_cursor();
+	disable_cursor();
 
 	cout << "Using " << r.threads << " thread(s)!" << endl;
 	cout << "Doing " << runc << " runs with a precision of " << r.precision << " for " << digits << " digits." << endl;
