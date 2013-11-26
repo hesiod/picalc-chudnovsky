@@ -49,8 +49,9 @@ namespace picalc
 		friend std::istream& operator>>(std::istream& out, cache& p)
 		{
 		}*/
-		void fast_factorial(const unsigned long k) noexcept
+		void fast_factorial(const unsigned long k)
 		{
+			mpfr::mpreal::set_default_prec(info.precision);
 			if (fac.find(k) == fac.end())
 			{
 				mpfr::mpreal tmp = mpfr::fac_ui(k);
@@ -72,6 +73,8 @@ namespace picalc
 		}
 		void precalculate(size_t num)
 		{
+			mpfr::mpreal::set_default_prec(info.precision);
+
 			num += k;
 			std::vector<std::thread> t (info.threads);
 
@@ -130,14 +133,17 @@ namespace picalc
 		}
 		cache(run_info r) : k(0), info(r)
 		{
+			mpfr::mpreal::set_default_prec(info.precision);
+			std::cout << std::dec << " __ Default == " << mpfr::mpreal::get_default_prec() << " __ " << std::endl;
 			fac.insert(std::pair<unsigned long, mpfr::mpreal>(0, 1));
 		}
 		~cache()
 		{
 			mpfr_free_cache();
 		}
-		inline const mpfr::mpreal lookup(const unsigned long k) const noexcept
+		inline const mpfr::mpreal lookup(const unsigned long k) const
 		{
+			mpfr::mpreal::set_default_prec(info.precision);
 			return fac.at(k);
 		}
 	};
@@ -149,57 +155,65 @@ namespace picalc
 		run_info info;
 		std::atomic<unsigned long> j;
 		cache c;
-		static inline unsigned long exp_mod(const unsigned long b, unsigned long n, const unsigned long k) noexcept
+		double exp_mod(const long b, long n, const long k) const
 		{
-			unsigned long r = 1;
-			unsigned long t = 0;
+			double r = 1.0;
+			double t = 0.0;
 			unsigned int i;
 			for (i = 0; t <= n; i++)
 			{
-				t = pow(2, i);
+				t = pow(2.0, i);
 			}
 			i--;
-			t = pow(2, i);
+			t = pow(2.0, i);
 			while (1)
 			{
 				if (n >= t)
 				{
+					//r = mpfr::mod(b * r, k);
 					r = fmod(b * r, k);
-					n -= t;
+					n = n - t;
 				}
-				t /= 2;
-				if (t >= 1)
+				t /= 2.0;
+				if (t >= 1.0)
 				{
-					r = fmod(pow(r, 2), k);
+					//r = mpfr::mod(mpfr::pow(r, 2.0), k);
+					r = fmod(pow(r, 2.0), k);
 				}
 				else
 					break;
 			}
 			return r;
 		}
-		static inline unsigned long sum_for(const unsigned long n, const unsigned long j) noexcept
+		double sum_for(const long n, const long j) const
 		{
-			unsigned long sum = 0;
+			double sum = 0;
+			//std::cout << "n " << n << " j " << j << std::endl;
 
-			for (unsigned long k = 0; k <= n; k++)
+			for (long k = 0; k <= n; k++)
 			{
 				//sum += mpfr::mod(mpfr::pow(16, n - k), (8 * k) + j) / ((8 * k) + j);
-				sum += exp_mod(16, n - k, (8 * k) + j) / ((8 * k) + j);
+				sum += exp_mod(16.0, n - k, (8.0 * k) + j) / ((8.0 * k) + j);
+				//std::cout << exp_mod(16.0, n - k, (8.0 * k) + j) / ((8.0 * k) + j) << std::endl;
 			}
-			for (unsigned long k = n + 1; k <= n + 32; k++)
+			//std::cout << "sum == " << sum << std::endl;
+			for (long k = n + 1; k <= n + 8; k++)
 			{
-				sum += pow(16.0, n - k) / (8 * k + j);
+				sum +=  pow(16.0, n - k) / (8.0 * k + j);
+			//std::cout << "pow == " << pow(16.0, n - k) << " n - k == " << (signed long)(n - k) << std::endl;
 			}
+			//std::cout << "sum == " << sum << std::endl;
 
 			return sum;
 		}
-		static inline unsigned long bbp_for(const unsigned long n) noexcept
+		double bbp_for(const long n) const
 		{
-			unsigned long a =	(4 * sum_for(n, 1)) \
-					-	(2 * sum_for(n, 4)) \
-					-	(1 * sum_for(n, 5)) \
-					-	(1 * sum_for(n, 6));
-			a = a % 1;
+			double		a =	(4.0 * sum_for(n, 1.0)) \
+					-	(2.0 * sum_for(n, 4.0)) \
+					-	(1.0 * sum_for(n, 5.0)) \
+					-	(1.0 * sum_for(n, 6.0));
+			a -= floor(a);
+			//std::cout << "a == " << a << std::endl;
 			return a;
 		}
 		static inline unsigned long long hex_at(mpfr::mpreal r, const unsigned int k, const unsigned int len = 8)
@@ -293,7 +307,7 @@ namespace picalc
 
 			return std::move(a);
 		}
-		static inline mpfr::mpreal pi_for(mpfr::mpreal sum) noexcept
+		static inline mpfr::mpreal pi_for(mpfr::mpreal sum)
 		{
 			const mpfr::mpreal c = mpfr::sqrt(10005.0) / 4270934400.0;
 			sum *= c;
@@ -302,7 +316,7 @@ namespace picalc
 		}
 	protected:
 	public:
-		void calculate(const unsigned int runs, const std::string verification_mode)
+		void calculate(const unsigned int runs, const std::string verification_mode, unsigned long digits)
 		{
 			mpfr::mpreal::set_default_prec(info.precision);
 			mpfr::mpreal sum = 0;
@@ -399,16 +413,16 @@ namespace picalc
 			}*/
 
 			std::cout << "##############" << std::endl;
-
+(void)digits;
 			if (verification_mode == "full")
 			{
 				unsigned long correct_digits = 0;
 				std::string tmp = pi.toString().substr(2);
 				unsigned long sz = 1 + (mpfr::log2(mpfr::mpreal(tmp)).toULong() / 4);
-				for (unsigned int k = 0; k < sz - 1; k += 8)
+				for (unsigned int k = 0; k < sz - 1; k += 1)
 				{
-					if (hex_at(bbp_for(k), 0, 8) == hex_at(pi, k, 8))
-						correct_digits += 8;
+					if (hex_at(bbp_for(k), 0, 1) == hex_at(pi, k, 1))
+						correct_digits += 1;
 					else
 						break;
 				}
@@ -417,26 +431,25 @@ namespace picalc
 			}
 			else if (verification_mode == "normal")
 			{
+				const unsigned int parallel = 8;
 				unsigned long incorrect_digits = 0;
 				std::string tmp = pi.toString().substr(2);
-				unsigned long sz = 1 + (mpfr::log2(mpfr::mpreal(tmp)).toULong() / 4);
-				for (unsigned long k = sz - 2; k > 0; k--)
+				unsigned long sz = 1 + (mpfr::log2(mpfr::mpreal(tmp)).toULong() / 4) - 2;
+				sz -= sz % parallel;
+				std::cout << std::dec << "sz == " << sz << std::endl;
+				for (unsigned long k = sz; k > 0; k -= parallel)
 				{
-					std::cout << "hello" << std::endl;
-					if (hex_at(bbp_for(k), 0, 1) != hex_at(pi, k, 1))
-						incorrect_digits++;
+					std::cout << std::dec << "k == " << k << " ### " << std::hex << hex_at(bbp_for(k), 0, parallel) << " ### " << hex_at(pi, k, parallel) << std::endl;
+					if (hex_at(bbp_for(k), 0, parallel) != hex_at(pi, k, parallel))
+						incorrect_digits += parallel;
 					else
-						if (hex_at(bbp_for(k), 0, 1) != hex_at(pi, k, 1))
-							incorrect_digits += 2;
-						else
-							if (hex_at(bbp_for(k), 0, 1) != hex_at(pi, k, 1))
-								incorrect_digits += 3;
-							else
-								break;
+						break;
 				}
+				//incorrect_digits -= pi.toString().size();
 				std::cout << std::dec << "Incorrect digits (counted from the end): " << incorrect_digits << std::endl;
-				std::cout.precision(8);
-				std::cout << std::dec << std::fixed << "That are " << incorrect_digits / pi.toString().size() * 100.0 << "% of all digits." << std::endl;
+				std::cout << "Buffer Length: " << pi.toString().size() << std::endl;
+				std::cout.precision(4);
+				std::cout << std::dec << std::fixed << "That are " << (double)incorrect_digits / (double)pi.toString().size() * 100.0 << "% of all digits." << std::endl;
 			}
 			// Do nothing if verification_mode is "none"
 
@@ -447,7 +460,6 @@ namespace picalc
 			//std::cout.precision(1024);
 			std::cout << ss.str() << std::endl;
 
-			std::cout << "Buffer Length: " << pi.toString().size() << std::endl;
 
 			mpfr_free_cache();
 		}
@@ -482,10 +494,10 @@ namespace picalc
 			std::stringbuffer str;
 			return outstr.size();
 		}*/
-		pi(const run_info r, unsigned int runs, std::string verification_mode) //: finished(false)
+		pi(const run_info r, unsigned int runs, std::string verification_mode, unsigned long digits) //: finished(false)
 		{
 			chudnovsky ch(r);
-			ch.calculate(runs, verification_mode);
+			ch.calculate(runs, verification_mode, digits);
 		}
 		~pi()
 		{
@@ -508,7 +520,7 @@ namespace picalc
 					return actual;
 				});
 			cout << "Waiting..." << endl;
-			double prog;
+			mpfr::mpreal prog;
 			do
 			{
 				prog = calc->get_progress();

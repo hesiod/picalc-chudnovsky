@@ -87,7 +87,7 @@ int main(int argc, char* argv[])
 	cout << "Using " << r.threads << " thread(s)!" << endl;
 	cout << "Doing " << runc << " runs with a precision of " << r.precision << " for " << digits << " digits." << endl;
 
-	picalc::pi p(r, runc, verification_mode);
+	picalc::pi p(r, runc, verification_mode, digits);
 
 	//p.calculate(runc);
 
