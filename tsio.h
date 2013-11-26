@@ -10,6 +10,8 @@
 #include <iostream>
 #include <thread>
 #include <future>
+#include <sstream>
+#include <cstdio>
 
 /*template<std::ostream& O>
 class tso : tsio
@@ -23,73 +25,52 @@ class tsi
 	std::istream& operator>>(T& t) = delete;
 };*/
 
-template<std::istream& I, std::ostream& O>
-class tsio final
+//extern std::mutex p;
+
+template<std::istream& I, std::ostream& O> //, class charT = char, class traits = std::char_traits<charT>>
+class tsio  //: std::basic_ostream<charT, traits>
 {
 private:
+	std::mutex printlock, buflock;
+	std::stringstream buf;
+	//using ostr = std::basic_ostream<charT, traits>;
 protected:
-	static std::mutex p;
-	static std::thread::id id;
-	static bool locked;
 public:
-	template<typename T>
+	template <typename T>
 	std::ostream& operator<<(const T& t)
 	{
-		if (std::this_thread::get_id() == id && locked)
-		{
-			O << t;
-		}
-		else
-		{
-			p.lock();
-			O << t;
-			p.unlock();
-		}
+		std::unique_lock<std::mutex> lock (buflock);
+		buf << t;
 		return O;
 	}
-	template<typename T>
-	std::istream& operator>>(T& t)
+	std::ostream& operator<<(std::ostream& (*f)(std::ostream&))
 	{
-		if (std::this_thread::get_id() == id && locked)
-		{
-			I >> t;
-		}
-		else
-		{
-			p.lock();
-			I >> t;
-			p.unlock();
-		}
-		return I;
+		std::unique_lock<std::mutex> lock (printlock);
+		O << f;
+		O << buf.str();
+		buf.str("");
+		return O;
 	}
-	int lprintf(const char* format, ...) noexcept
+	/*std::ostream& flush()
+	{
+		std::unique_lock<std::mutex> lock (printlock);
+		O << buf.str();
+		buf.str("");
+		return O;
+	}*/
+	/*int lprintf(const char* format, ...) noexcept
 	{
 		int ret;
 		va_list l;
 		va_start(l, format);
-		if (std::this_thread::get_id() == id && locked)
-		{
-			ret = vprintf(format, l);
-		}
-		else
-		{
-			p.lock();
-			ret = vprintf(format, l);
-			p.unlock();
-		}
+		std::unique_lock<std::mutex> lock (printlock);
+		ret = vprintf(format, l);
 		va_end(l);
 		return ret;
-	}
-	void lock() noexcept
+	}*/
+	std::mutex& mutex()
 	{
-		p.lock();
-		id = std::this_thread::get_id();
-		locked = true;
-	}
-	void unlock() noexcept
-	{
-		locked = false;
-		p.unlock();
+		return printlock;
 	}
 	tsio() noexcept
 	{
@@ -99,15 +80,60 @@ public:
 	}
 };
 
-template<std::istream& I, std::ostream& O>
-std::mutex tsio<I, O>::p;
+//template <class charT, class traits>
+/*template <std::istream& I, std::ostream& O>
+tsio& sync(tsio& os)
+{
+}*/
 
-template<std::istream& I, std::ostream& O>
-bool tsio<I, O>::locked = false;
+//template <std::istream& I, std::ostream& O>
+//std::mutex tsio<I, O>::p;
 
-template<std::istream& I, std::ostream& O>
-std::thread::id tsio<I, O>::id;
 
-extern tsio<std::cin, std::cout> ts;
+//#define ts 	cout
+//extern tsio<std::cin, std::cout> ts;
+
+/*template <typename T>
+	ostr& operator<<(const T& t)
+	{
+		buf << t;
+		return O;
+	}
+	ostr& operator<<(ostr& (*func)(ostr&))
+	{
+		func(*this);
+		return O;
+	}
+	std::ostream& flush()
+	{
+		std::unique_lock<std::mutex> lock (p);
+		O << buf.str();
+		buf.str("");
+		return O;
+	}
+	tsio& endl(tsio& os)
+	{
+		os << '\n';
+		os.flush();
+		return O;
+	}
+	template <typename T>
+	std::istream& operator>>(T& t)
+	{
+		std::unique_lock<std::mutex> lock (p);
+		I >> t;
+		return I;
+	}*/
+	/*int lprintf(const char* format, ...) noexcept
+	{
+		char tbuf[1024];
+		int ret;
+		va_list l;
+		va_start(l, format);
+		ret = vsnprintf(tbuf, 1024, format, l);
+		va_end(l);
+		buf << tbuf;
+		return ret;
+	}*/
 
 #endif

@@ -4,8 +4,8 @@ picalc-euler is an arbitrary precision pi calculator (Euler zeta-2 algorithm) us
 
 ## Prerequisites
 * [llvm/clang](http://clang.llvm.org), tested with 3.3
-* [libc++]() (the Standard C++ Library of clang), tested with 3.3
-* [gmp](), tested with 5.1.3
+* [libc++](http://libcxx.llvm.org) (the Standard C++ Library of clang), tested with 3.3
+* [gmp](http://gmplib.org/), tested with 5.1.3
 * [tclap](http://tclap.sourceforge.net/) (the Templatized C++ Command Line Parser), tested with 1.2.1
 
 ### Why clang/libc++ and not gcc/libstdc++?
