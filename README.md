@@ -1,6 +1,6 @@
-# picalc-euler
+# picalc-chudnovsky
 
-picalc-euler is an arbitrary precision pi calculator (Chudnovsky algorithm) using C++ and the Multiple Precision Library with correct rounding (GNU MPFR).
+picalc-chudnovsky is an arbitrary precision pi calculator (Chudnovsky algorithm) using C++ and the Multiple Precision Library with correct rounding (GNU MPFR).
 
 ## Prerequisites
 * ~~[llvm/clang](http://clang.llvm.org), tested with 3.3~~ gcc is fixed now
