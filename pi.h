@@ -1,9 +1,3 @@
-/*
- * pi.h
- * Copyright (C) 2013 Tobias Markus <tobias@markus-regensburg.de>
- * 
- */
-
 #ifndef PI_H
 #define PI_H
 

@@ -1,9 +1,3 @@
-/*
- * tsio.h
- * Copyright (C) 2013 Tobias Markus <tobias@markus-regensburg.de>
- * 
- */
-
 #ifndef TSIO_H
 #define TSIO_H
 

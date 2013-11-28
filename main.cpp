@@ -1,9 +1,3 @@
-/*
- * main.cpp
- * Copyright (C) 2013 Tobias Markus <tobias@markus-regensburg.de>
- * 
- */
-
 #include <thread>
 #include <iostream>
 #include <cstdlib>

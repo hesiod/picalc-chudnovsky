@@ -1,9 +1,3 @@
-/*
- * pi.cpp
- * Copyright (C) 2013 Tobias Markus <tobias@markus-regensburg.de>
- * 
- */
-
 #include <iomanip>
 #include <vector>
 #include <thread>
