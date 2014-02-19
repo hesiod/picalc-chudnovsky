@@ -84,6 +84,14 @@ namespace picalc
 				fac.insert(std::pair<unsigned long, mpfr::mpreal>(6 * k, tmp));
 			}
 		}
+		void caching_precalculate(const size_t num)
+		{
+			fac.insert(std::pair<unsigned long, mpfr::mpreal>(1, mpfr::mpreal(1)));
+			for (unsigned long i = 2; i <= 6 * num; i++)
+			{
+				fac.insert(std::pair<unsigned long, mpfr::mpreal>(i, i * fac.at(i - 1)));
+			}
+		}
 		void precalculate(size_t num)
 		{
 			mpfr::mpreal::set_default_prec(info.precision);
@@ -168,6 +176,24 @@ namespace picalc
 		run_info info;
 		std::atomic<unsigned long> j;
 		cache c;
+
+		long better_exp_mod(long base, long exponent, const long modulus) const
+		{
+			if (base < 1 || exponent < 0 || modulus < 1)
+				throw std::invalid_argument("something went wrong");
+
+			long result = 1;
+			while (exponent > 0)
+			{
+				if ((exponent % 2) == 1)
+				{
+					result = (result * base) % modulus;
+				}
+				base = (base * base) % modulus;
+				exponent = floor(exponent / 2.0);
+			}
+			return std::move(result);
+		}
 		double exp_mod(const long b, long n, const long k) const
 		{
 			double r = 1.0;
@@ -206,7 +232,8 @@ namespace picalc
 			for (long k = 0; k <= n; k++)
 			{
 				//sum += mpfr::mod(mpfr::pow(16, n - k), (8 * k) + j) / ((8 * k) + j);
-				sum += exp_mod(16.0, n - k, (8.0 * k) + j) / ((8.0 * k) + j);
+				//sum += exp_mod(16.0, n - k, (8.0 * k) + j) / ((8.0 * k) + j);
+				sum += better_exp_mod(16, n - k, (8.0 * k) + j) / ((8.0 * k) + j);
 				//std::cout << exp_mod(16.0, n - k, (8.0 * k) + j) / ((8.0 * k) + j) << std::endl;
 			}
 			//std::cout << "sum == " << sum << std::endl;
@@ -275,7 +302,7 @@ namespace picalc
 			{
 				std::cerr << std::endl << "##############" << std::endl;
 				std::cerr << "Fatal error in program logic." << std::endl;
-				std::cerr << "The limit for hex_at is  std::numeric_limits<unsigned long long>::max()  , usually (2 ^ 64) / 2." << std::endl;
+				std::cerr << "The limit for hex_at is  >>>  std::numeric_limits<unsigned long long>::max()  <<<  , usually (2 ^ 64) / 2." << std::endl;
 				std::cerr << "Debug output (If you see this, create a debug report at Github) ### <" << result.substr(k, len) << "> at index <" << k << "> for len of <" << len << "> while result size is <" << result.size() << ">" << std::endl;
 				throw;
 			}
@@ -305,8 +332,8 @@ namespace picalc
 			try
 			{
 				a = mpfr::pow(-1.0, k) *					\
-				(c.lookup(6 * k)	/						\
-				(c.lookup(3 * k) * mpfr::pow(c.lookup(k), 3.0)))			\
+				(c.lookup(6 * k)	/					\
+				(c.lookup(3 * k) * mpfr::pow(c.lookup(k), 3.0)))		\
 				*								\
 				(((k * 545140134.0) + 13591409.0) / mpfr::pow(640320.0, 3.0 * k));
 			}
@@ -314,7 +341,7 @@ namespace picalc
 			{
 				std::cerr << std::endl << "##############" << std::endl;
 				std::cerr << "Fatal error in program logic." << std::endl;
-				std::cerr << "Debug output (If you see this, create a debug report at Github) ### index is <" << k << ">" << std::endl;	
+				std::cerr << "Debug output (If you see this, create a debug report at Github) ### index is <" << k << ">" << std::endl;
 				throw;
 			}
 
@@ -340,7 +367,7 @@ namespace picalc
 
 			std::cout << std::endl << "##############" << std::endl << "Precalculating..." << std::endl;
 
-			c.precalculate(runs);
+			c.caching_precalculate(runs);
 
 			std::cout << "##############" << std::endl;
 
@@ -444,7 +471,7 @@ namespace picalc
 			}
 			else if (verification_mode == "normal")
 			{
-				const unsigned int parallel = 8;
+				constexpr unsigned int parallel = 4;
 				unsigned long incorrect_digits = 0;
 				std::string tmp = pi.toString().substr(2);
 				unsigned long sz = 1 + (mpfr::log2(mpfr::mpreal(tmp)).toULong() / 4) - 2;
@@ -544,7 +571,7 @@ namespace picalc
 			//t.join();
 			//cout << endl << "All threads are finished." << endl;
 			//finished = true;
-		
+
 	};
 }
 
