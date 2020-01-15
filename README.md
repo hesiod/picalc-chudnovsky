@@ -17,13 +17,13 @@ Nope, libstdc++ is OK again. You are still free to use clang++, of course.
 
 ## Compiling
 
-Just run `scons`, it should do the job.
+First run `meson setup build` to setup `build` as a build directory, then run `ninja -C build`.
 
 ## Running
 
-Run `pi`.
-By just running `pi` without any arguments, picalc-euler will assume some default precision settings. These may or may not be desirable for you.
-Try `pi --help` for some more advanced settings.
+Run `picalc-chudnovsky` in the build directory.
+By just running `picalc-chudnovsky` without any arguments, picalc-euler will assume some default precision settings. These may or may not be desirable for you.
+Try `picalc-chudnvosky --help` for some more advanced settings.
 
 ### What do all those settings mean?
 
