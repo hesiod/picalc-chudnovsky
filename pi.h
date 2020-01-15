@@ -192,7 +192,7 @@ namespace picalc
 				base = (base * base) % modulus;
 				exponent = floor(exponent / 2.0);
 			}
-			return std::move(result);
+			return result;
 		}
 		double exp_mod(const long b, long n, const long k) const
 		{
