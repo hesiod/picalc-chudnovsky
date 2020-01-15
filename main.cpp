@@ -101,11 +101,11 @@ int main(int argc, char* argv[])
 		return EXIT_FAILURE;
 	}
 
-	cout << "picalc-chudnovsky\tCopyright (C) 2013-2014 Tobias Markus" << endl <<
+	cout << "picalc-chudnovsky\tCopyright (C) 2013-2020 Tobias Markus" << endl <<
 		"This program comes with ABSOLUTELY NO WARRANTY." << endl <<
 		"This is free software, and you are welcome to redistribute it" << endl <<
 		"under certain conditions; for more information, visit" << endl <<
-		"https://github.com/scogol/picalc-chudnovsky" << endl << endl;
+		"https://github.com/hesiod/picalc-chudnovsky" << endl << endl;
 
 	mpfr::mpreal::set_default_prec(r.precision);
 
