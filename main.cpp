@@ -49,11 +49,19 @@ public:
 	}
 };
 
+void handle_sigint(int) {
+    enable_cursor(); cout << endl; exit(1);
+}
+
+void handle_sigsegv(int) {
+    enable_cursor(); cout << endl << "Recieved SIGSEGV" << endl; exit(1); 
+}
+
 int main(int argc, char* argv[])
 {
 	atexit([] () { enable_cursor(); cout << endl; });
-	signal(SIGINT,  static_cast<__sighandler_t>( [&] (int) { enable_cursor(); cout << endl; exit(1); } ));
-	signal(SIGSEGV, static_cast<__sighandler_t>( [&] (int) { enable_cursor(); cout << endl << "Recieved SIGSEGV" << endl; exit(1); } ));
+	signal(SIGINT,  static_cast<__sighandler_t>(&handle_sigint));
+	signal(SIGSEGV, static_cast<__sighandler_t>(&handle_sigsegv));
 
 	picalc::run_info r;
 	unsigned long runc;
